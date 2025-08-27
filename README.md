@@ -20,4 +20,17 @@
 - https://github.com/Bodmer/TFT_eSPI/issues/3332
 - https://stackoverflow.com/questions/63399901/how-to-fix-guru-meditation-error-core-1-paniced-loadprohibited-error
 
+## ESP IDF:
+- https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/index.html
+- https://github.com/espressif/esp-idf
+- 
+
+## Funktionen:
+- Kamera mit Gesichtserkennung
+  - Gesichtserkennung auf Lächeln oder wütend aussehen (Staatsfeind, Staatsfreund)
+- Lautsprecher: (Für Aussagen, Gruuu Geräusche)
+- Benutzeroberfläche --> wahrscheinlich Webserver
+  - Geräusche Steuern
+  - Statusupdate ()
+- Flatterne 
 
