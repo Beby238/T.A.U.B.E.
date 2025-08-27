@@ -28,9 +28,12 @@
 ## Funktionen:
 - Kamera mit Gesichtserkennung
   - Gesichtserkennung auf Lächeln oder wütend aussehen (Staatsfeind, Staatsfreund)
+  - ON/OFF
 - Lautsprecher: (Für Aussagen, Gruuu Geräusche)
 - Benutzeroberfläche --> wahrscheinlich Webserver
-  - Geräusche Steuern
+  - Geräusche Steuern, Es als Lautsprecher verwenden oder von Text ablesen
   - Statusupdate ()
-- Flatterne 
+- Flattern (Mit Motoren)
+- Sende Möglichkeiten
+- 
 
