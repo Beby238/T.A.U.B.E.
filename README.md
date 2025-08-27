@@ -26,6 +26,9 @@
 - https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/get-started/establish-serial-connection.html
 - https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/get-started/linux-macos-setup.html
 - https://www.youtube.com/watch?v=oHHOCdmLiII
+- Für Debugging:
+  - https://www.youtube.com/watch?v=uq93H7T7cOQ
+  - 
 
 ## Funktionen:
 - Kamera mit Gesichtserkennung
