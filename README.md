@@ -19,6 +19,8 @@
   - ESP32 CAM
 - https://github.com/Bodmer/TFT_eSPI/issues/3332
 - https://stackoverflow.com/questions/63399901/how-to-fix-guru-meditation-error-core-1-paniced-loadprohibited-error
+- Memory Testing:
+  - https://lonelybinary.com/en-uk/blogs/tinkerblock-esp32-s3-starter-kit/01_6_memory_testing_guide
 
 ## ESP IDF:
 - https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/index.html
