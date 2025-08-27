@@ -12,7 +12,7 @@ idf.py menuconfig     <-- startet das Project configuration Home window um die
 			verschiedene Sachen einzustellen
 
 Dann rausgehen und 
-idf.py build
+idf.py build  <-- mit idf.py fullclean , wird der build ordner gelert
 ausführend
 
 Anschließend:
@@ -28,3 +28,8 @@ idf.py -p PORT flash monitor
 
 Es kann auch geflashed werden:
 idf.py -p PORT erase-flash  <-- Achtung den flash leeren kann dauern
+
+
+Projekt Erstellung:
+Ordner erstellen, reingehen und folgendes ausführen:
+idf.py create-project -p . NAME
