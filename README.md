@@ -10,3 +10,14 @@
   - Pin Belegung des CAM-Slots
 - https://randomnerdtutorials.com/esp32-cam-troubleshooting-guide/?utm_source=chatgpt.com
   - Probleme mit Lösungen
+- https://www.donskytech.com/esp32-exception-decoder/
+- https://www.reddit.com/r/esp32/comments/1aoi80y/bought_an_esp32s3_and_tried_the_psram/
+- https://docs.espressif.com/projects/esp-idf/en/v4.3-rc/esp32/api-guides/fatal-errors.html
+- https://knowledge.oasis-x.io/ov-2640-esp32-setup-guide-advanced-110
+- https://randomnerdtutorials.com/esp32-cam-troubleshooting-guide/
+- https://randomnerdtutorials.com/esp32-cam-ai-thinker-pinout/  
+  - ESP32 CAM
+- https://github.com/Bodmer/TFT_eSPI/issues/3332
+- https://stackoverflow.com/questions/63399901/how-to-fix-guru-meditation-error-core-1-paniced-loadprohibited-error
+
+
