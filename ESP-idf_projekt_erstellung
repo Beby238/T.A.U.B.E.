@@ -3,6 +3,7 @@
 cd ~/esp
 cp -r $IDF_PATH/examples/get-started/hello_world .
 
+Mit: "sudo dmesg | grep tty", werden alle angeschlossene USB Ports dargestellt
 Der PORT wenn der beschäftigt ist, kann mit lsof PORT unbeschäftigt werden
 
 In den Ordner rein, und Befehl eintippen:
