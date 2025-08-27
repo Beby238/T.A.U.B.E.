@@ -3,6 +3,8 @@
 cd ~/esp
 cp -r $IDF_PATH/examples/get-started/hello_world .
 
+Der PORT wenn der beschäftigt ist, kann mit lsof PORT unbeschäftigt werden
+
 In den Ordner rein, und Befehl eintippen:
 idf.py set-target esp32s3
 idf.py menuconfig     <-- startet das Project configuration Home window um die
