@@ -35,5 +35,4 @@
   - Statusupdate ()
 - Flattern (Mit Motoren)
 - Sende Möglichkeiten
-- 
 
