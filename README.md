@@ -23,7 +23,8 @@
 ## ESP IDF:
 - https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/index.html
 - https://github.com/espressif/esp-idf
-- 
+- https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/get-started/establish-serial-connection.html
+- https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/get-started/linux-macos-setup.html
 
 ## Funktionen:
 - Kamera mit Gesichtserkennung
