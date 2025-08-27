@@ -28,7 +28,8 @@
 - https://www.youtube.com/watch?v=oHHOCdmLiII
 - Für Debugging:
   - https://www.youtube.com/watch?v=uq93H7T7cOQ
-  - 
+- API Schnittstelle mit Funktionen:
+  - https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/index.html
 
 ## Funktionen:
 - Kamera mit Gesichtserkennung
