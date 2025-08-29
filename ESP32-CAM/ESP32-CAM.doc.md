@@ -12,7 +12,11 @@
   - https://www.youtube.com/watch?v=Ydi0M3Xd_vs&list=PLYutciIGBqC1diV8-nsTI0DY-pYNWxDaY
  
 ### Information:
-- 
+- Geräte sind entweder Initator oder Responder (beides geht auch)
+  - Initator sendet Daten, Responder bekommt die Daten <-- häufig gibt es viele Iniator und ein Responder
+- max. 250 bytes pro Packet <-- eigene Lösung geben
+  - zwischen 6 - 20 Stationen
+- MAC-Adresse wird benötigt --> muss herausgefunden werden (gibt sketches)
  
 ## andere interessante ESP sachen:
 - https://youtu.be/sLW_r0OVyok?si=TYqVd2hErxwQghLa
