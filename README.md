@@ -25,7 +25,10 @@
 ## ESP-CAM (von QIQIAZI)
 - https://www.amazon.de/-/en/ESP32-CAM-Bluetooth-Development-ESP32-CAM-CM-Compatible/dp/B0DBHHQ7GX?crid=37KFDL1ZR7HRY&dib=eyJ2IjoiMSJ9.E3C6qinCAnEY84Gunl-Z4j4h5wX6d01K4mhHU689i73M_Ix3T4yaE1aTZyQGIIEd5dLphC1AsncBOKwDiC3ZhX9Bo0PHEGU_Q0QEcdeFLcp2YA5495W5rjvRjRCImXv0E8HTgY7dLAKH42bHJHFcX8J7HQzz-742l70GowQPKPbQGuskfxCANT0Zqiki7JA3xjNVFntaj_XMXmKru7KqgsDEzmp8zq-xuFoWHOhJMYg.Ow49Q-ClAkruMd2BpoHm4w0qlJtdtAmt5rEV_dXV6SE&dib_tag=se&keywords=esp32+cam&qid=1756395605&sprefix=esp32+cam%2Caps%2C128&sr=8-7
 - https://www.youtube.com/watch?v=z67mfL63e2M
-- 
+
+### ESP32-Cam Hinweise:
+- für die Board LED: GPIO 4
+- Siehe ESP32-CAM für die Konfieguration
 
 ## ESP IDF:
 - https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/index.html
