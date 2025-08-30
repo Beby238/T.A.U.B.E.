@@ -17,6 +17,7 @@
 - max. 250 bytes pro Packet <-- eigene Lösung geben
   - zwischen 6 - 20 Stationen
 - MAC-Adresse wird benötigt --> muss herausgefunden werden (gibt sketches)
+- Zwei ESPs können betrieben werden, indem eine weitere Arduino IDE Instanz ausgeführt wird und der andere Port ausgewählt ist
  
 ## andere interessante ESP sachen:
 - https://youtu.be/sLW_r0OVyok?si=TYqVd2hErxwQghLa
