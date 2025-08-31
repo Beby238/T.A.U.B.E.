@@ -21,6 +21,7 @@
   - zwischen 6 - 20 Stationen
 - MAC-Adresse wird benötigt --> muss herausgefunden werden (gibt sketches)
 - Zwei ESPs können betrieben werden, indem eine weitere Arduino IDE Instanz ausgeführt wird und der andere Port ausgewählt ist
+- Die MAC Adresse kann auch ermittelt werden, indem wir mittels WIFI.scanNetworks() , verwenden um die SSID vom Gerät zu nehmen und die MAC-Adresse bekommen
 
 ### Sendevorgang:
 - WIFI muss vor NOW initialisiert werden
