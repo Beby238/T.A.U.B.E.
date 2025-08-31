@@ -23,6 +23,7 @@
 - Zwei ESPs können betrieben werden, indem eine weitere Arduino IDE Instanz ausgeführt wird und der andere Port ausgewählt ist
 
 ### Sendevorgang:
+- WIFI muss vor NOW initialisiert werden
 
  
 ## andere interessante ESP sachen:
