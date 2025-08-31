@@ -8,6 +8,7 @@
 - https://randomnerdtutorials.com/esp-now-esp32-arduino-ide/
 - https://www.espressif.com/en/solutions/low-power-solutions/esp-now
 - https://randomnerdtutorials.com/esp-now-two-way-communication-esp32/
+- https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/network/esp_now.html
 - Playlist:
   - https://www.youtube.com/watch?v=Ydi0M3Xd_vs&list=PLYutciIGBqC1diV8-nsTI0DY-pYNWxDaY
  
