@@ -28,6 +28,8 @@
 ### Sendevorgang:
 - WIFI muss vor NOW initialisiert werden
 
+## ESP Photo + NOW
+- https://www.youtube.com/watch?v=0s4Bm9Ar42U
  
 ## andere interessante ESP sachen:
 - https://youtu.be/sLW_r0OVyok?si=TYqVd2hErxwQghLa
