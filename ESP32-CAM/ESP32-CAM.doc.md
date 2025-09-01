@@ -34,4 +34,5 @@
 ## andere interessante ESP sachen:
 - https://youtu.be/sLW_r0OVyok?si=TYqVd2hErxwQghLa
 - https://youtu.be/dZjbGpynQJA?si=6eSoZuWkUTj2rPaq
-- 
+- Gallery Photo:
+  - https://randomnerdtutorials.com/esp32-cam-post-image-photo-server/
