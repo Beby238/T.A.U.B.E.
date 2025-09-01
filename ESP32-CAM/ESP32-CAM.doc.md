@@ -32,6 +32,7 @@
 
 ## ESP Photo + NOW
 - https://www.youtube.com/watch?v=0s4Bm9Ar42U
+- https://github.com/talofer99/ESP32CAM-Capture-and-send-image-over-esp-now/blob/master/Camera/Camera.ino
  
 ## andere interessante ESP sachen:
 - https://youtu.be/sLW_r0OVyok?si=TYqVd2hErxwQghLa
