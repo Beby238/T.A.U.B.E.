@@ -30,9 +30,13 @@
 ### Sendevorgang:
 - WIFI muss vor NOW initialisiert werden
 
+
 ## ESP Photo + NOW
 - https://www.youtube.com/watch?v=0s4Bm9Ar42U
 - https://github.com/talofer99/ESP32CAM-Capture-and-send-image-over-esp-now/blob/master/Camera/Camera.ino
+
+## Using PSRAM
+- https://thingpulse.com/esp32-how-to-use-psram/
  
 ## andere interessante ESP sachen:
 - https://youtu.be/sLW_r0OVyok?si=TYqVd2hErxwQghLa
