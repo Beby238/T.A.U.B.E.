@@ -37,6 +37,7 @@
 
 ## Using PSRAM
 - https://thingpulse.com/esp32-how-to-use-psram/
+- https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/external-ram.html#configuring-external-ram
  
 ## andere interessante ESP sachen:
 - https://youtu.be/sLW_r0OVyok?si=TYqVd2hErxwQghLa
