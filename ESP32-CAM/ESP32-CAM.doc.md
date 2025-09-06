@@ -34,6 +34,7 @@
 ## ESP Photo + NOW
 - https://www.youtube.com/watch?v=0s4Bm9Ar42U
 - https://github.com/talofer99/ESP32CAM-Capture-and-send-image-over-esp-now/blob/master/Camera/Camera.ino
+  - config.grab_mode = CAMERA_GRAB_LATEST; // Um das letzte Bild zu bekommen
 
 ## Using PSRAM
 - https://thingpulse.com/esp32-how-to-use-psram/
