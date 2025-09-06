@@ -20,11 +20,21 @@
 #define HREF_GPIO_NUM  23
 #define PCLK_GPIO_NUM  22
 
+//Maximale Paketgröße
+#define PackageSize 240.0
+
 // Esp32S3, kann auch automatisiert verlaufen mit SSID
 uint8_t broadcastAddress[] = {0xFC, 0x01, 0x2C, 0xD1, 0xF6, 0xD4};
 
 //Daten von Peer speichern (für die Verbindung wichtig)
 esp_now_peer_info_t peerInfo;
+
+int currentTransmitPositon = 0;
+int totalTransmitPackages = 0;
+
+//nächstes Packet kann gesendet werden
+int sendNextPackageFlag = 0;
+int tookPhoto = 0;
 
 void initCamera(){
   camera_config_t config;
@@ -75,6 +85,7 @@ void initCamera(){
   }
 }
 
+//Bei Foto aufnahme wird JPEG direkt in PSRAM gespeichert <-- bei Empfänger wichtig
 void reservepsram(uint16_t size){
   //reserviert 1 Kb und ptr zeigt auf die niedrigste Adresse
     //ps_malloc und malloc geben einen void* zurück, muss umgewandelt werden (durch Void flexibel)
@@ -91,19 +102,72 @@ void reservepsram(uint16_t size){
 
 }
 
-void makePhoto(){
+//Nicht auf SD-Card speichern
+void takePhoto(){
+  tookPhoto = 1;
+  //ich bekomme ein einen Puffer mit JPEG-Daten (fb->buf) und Länge (fb->len)
+    //DIe Länge kann mittels FF D8 vom JPEG Anfang und FF D9 ermittelt werden
+  //Mit esp_camera_fb_get() Aufnahme und liefert: camera_fb_t* --> zeigt auf einen Speicherbereich
+    //fb->buf ist der direkte Zugriffspiunkt auf diese Daten und fb->len sagt dir, wie viele Byte gültig sind
+  //esp_camera_fb_return(fb) freigeben sonst Speicherleck
 
+  camera_fb_t* fb = esp_camera_fb_get();
+  if (!fb || fb->format != PIXFORMAT_JPEG) {
+    Serial.println("Kamera aufnahme fehlgeschlagen!")
+    return;
+  }
+  uint8_t *jpeg = fb->buf;
+  uint16_t size = fb->len;
+  const int width = fb->width;
+  const int heigt = fb->heigt;
+  //Soll temporär im PSRAm gespeichert werden also reservepsram
+
+  //Am Ende muss hier esp_camera_fb_return(fb) stehen
+  tookPhoto = 0;
 }
 
 void cuttingPhoto(){
-
 }
 
-void makePhotoPackage(){
-
-}
 
 void peerVerbindung(){
+  //Bei der Peer verbindung sollten die Länge zuerst gesendet werden
+
+}
+
+void sendingtestdata(){
+
+}
+
+void sendingPackage(){
+
+  //Wen schon letztes Packet gesendet wird:
+
+  //Wenn letzes packet gesendet wird, muss anscheinend die Größe geändert werden:
+    //if (currentTransmitPackage == totalTransmitPackage - 1)
+
+  //Maximale Paket größe = 240 Bytes, ceil rundet AUF SEHR WICHTIG
+    // Berechnung: totalPackets = ceil(size / chunkSize)
+    //currentTransmitTotalPackages = ceil(size / PackageSize), angabe der Segmente
+
+  // uint8_t message[] = {0x01, currentTransmitTotalPackages >> 8, (byte) currentTransmitTotalPackages};
+    //DIe Paket Anzahl wird in 3 Dateneinträge (In Byte!) in ein Array geteilt (für Big Endian):
+      //Zuerst 0x01 für den Empfänger.
+      //Mit >> 8 wird es verschoben, damit es von 16 Bits auf 8 Bit runtergesetzt wird.
+      //Mit (uint8_t) wird die Variable in von 16 Bit zu 8 Bit umgewandelt,
+      // wobei aber nur das untere Byte bestehen bleibt.
+
+
+
+
+  //mit file.seek(...), damit wird im File geskippt --> ist einfach ein Offset wie in Memory
+  //In einem Array werden diese für Big Endian Ordnung gespeichert
+    //messageArray[1] ...
+    //messageArray[2] ..
+
+  //Beim Slave wird es wieder aufgebaut:
+    //currentTransmitTotalPackagges:
+      //uint16_t reconstructed = (high << 8) | low;
 
 }
 
@@ -111,6 +175,34 @@ void peerVerbindung(){
 void OnDataSent(const uint8_t * mac_addr, esp_now_send_status_t status) {
   Serial.print("\r\nLast Packet Send Status:\t");
   Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
+
+  if (status != ESP_NOW_Send_Success){
+    //currentTransmitCurrentPositio--; weil das vorherige Packet nicht korrekt gesendet wurde
+  }
+  //Beim Slave mit case 0x01, wenn die Anzahl der Pakete ankommt:
+    //currentTransmitTotalPackages = (*data++) << 8 | *data; wieder herstellen
+      //data ist ein Pointer der weitergegeben wird:
+        //data++ zeigen wir auf den anderen Byte verschieben das
+        // | data fügen hinten das andere Data hinzu
+
+  //Hinweis zu *data++:
+    //Zuerst wird alte Positon gemerkt,
+    // dann wird erhöht und dann wird mit deferenzierung die alte Positon angezeigt.
+
+  //Beim Slave mit case 0x02:
+    //currentTransmitPosition = (*data++) << 8 | *data++;
+      //z.B.: = data[0] << 8 | data[1]; data ist bei [2]
+
+  //Daten reinschreiben (File Beispiel):
+  /*      
+  for (int i=0; i < (data_len Serial.available() prüft zuverlässig, ob ein Byte da ist.-3); i++)
+      {
+        //byte dat = *data++;
+        //Serial.println(dat);
+        file.write(*data++);
+      }
+      */
+    //die letzten 3 Bytes vom Datensenden werden nicht benötigt, deshalb -3
 }
 
 void setup(){
@@ -149,8 +241,11 @@ void loop(){
   Serial.println("Freier PSRAM: " + ESP.getFreePsram()); 
 
   //Photo machen
+  if (Serial.read() == 'f' && !tookphoto){
+    takePhoto();
+  }
 
-  //Photo zerteilen
+  // später Implementierung von Photo zerteilen
   //Photo senden:
     //esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
   //Status abfrage:
