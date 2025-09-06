@@ -45,3 +45,4 @@
 - https://youtu.be/dZjbGpynQJA?si=6eSoZuWkUTj2rPaq
 - Gallery Photo:
   - https://randomnerdtutorials.com/esp32-cam-post-image-photo-server/
+- https://randomnerdtutorials.com/esp32-cam-take-photo-display-web-server/?utm_source=chatgpt.com
