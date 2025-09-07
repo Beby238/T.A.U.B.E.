@@ -1,0 +1,100 @@
+#include <esp_now.h>
+#include <WiFi.h>
+#define CHANNEL 1
+#define maxpacksize 240.0
+
+//die JPEGCLass wird vielleicht gebraucht um es anzuzeigen
+
+int currentTransmitPosition = 0;
+int totalTransmitPackages = 0;
+
+void* fb_buffer = 0;
+uint8_t* fb_ptr = 0;
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(115200);
+  pinMode(4, INPUT); //oder wenn esp32s3 LED_BUILTIN
+
+    // Set device as a Wi-Fi Station
+  WiFi.mode(WIFI_STA);
+
+    // Init ESP-NOW
+  esp_now_init();
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("Error initializing ESP-NOW");
+    return;
+  }
+    esp_now_register_recv_cb(esp_now_recv_cb_t(OnDataRecv));
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+
+}
+
+//initiert psram;
+void reservepsram(int size){
+  //reserviert z.B. 1 Kb undfb_bufferzeigt auf die niedrigste Adresse
+    //ps_malloc und malloc geben einen void* zurück, muss umgewandelt werden (durch Void flexibel)
+ fb_buffer = ps_malloc(size); //Nur Beispiel
+
+  fb_ptr = (uint8_t*)fb_buffer; //Typumwandlung für bytewqeise Zugriffe
+
+  //Setze alle Bytes auf 0
+  memset(fb_ptr, 0, size);
+
+  //heap_caps_get_largest_free_block(), um auf Fragmentierung zu achten
+  //fb_ptr[42] = 0;
+}
+
+void OnDataRecv(const uint8_t * mac, const uint8_t *indata, int len) {
+  //memcpy(..., incomingData, sizeof(myData)); //memcpy: destintation, source, size
+    //potentiell gut
+  switch(*indata++){
+
+    case 0x01:
+      Serial.println("Start new Photo transfer.");
+      currentTransmitPosition = 0;
+      totalTransmitPackages = (*indata++) << 8 | *indata;
+        //Zuerst wird Pointer initialisiert, dann um eins inkrementiert und dann wird vorherhiger Wert gelesen
+      Serial.println("totalTransmitPackages = " + String(totalTransmitPackages));
+
+      //psram initieren und schreiben
+      /// XXX: Kann sein dass die RAM Größe nicht ausreicht
+      reservepsram(ceil(totalTransmitPackages * maxpacksize));
+
+      break;
+
+    case 0x02:
+      //Nach Positionangabe, soll es zum Datenbyte gehen
+        //Der Sender bestimmt die Position
+      currentTransmitPosition = (*indata++) << 8 | *indata++;
+      Serial.println("package Number = " + String(currentTransmitPosition));
+
+      /// XXX: !!!!!!ACHTUNG KRITISCHE STELLE
+
+      for (int i = 0; i < (len - 3); i++) {// HIER ACHTEN WEGEN -3!!!!!!
+        
+        /// XXX: Die Zuweisung zur Adresse kann falsch sein!!!
+
+        fb_ptr[currentTransmitPosition * totalTransmitPackages + i] = *indata++;
+      }
+
+      if (currentTransmitPosition == totalTransmitPackages){
+        //Code um in Webbasiert anzuzeigen, keine Lust auf SD-Karte:
+        Serial.println("Datentransfer fertig");
+        //Bytes anzeigen
+        uint8_t j = 0;
+        for (int i = 0; i < ceil(totalTransmitPackages * maxpacksize); i++){
+          if (j >= 240){
+            Serial.println("");
+          }else{
+            Serial.print(fb_ptr[i] + " ");
+          }
+
+        }
+      }
+      
+  }
+}
