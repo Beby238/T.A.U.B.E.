@@ -37,6 +37,7 @@ int totalTransmitPackages = 0;
 uint8_t sendnextPackageFlag = 0;
 
 void initCamera(){
+  Serial.println("Foto Setup");
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
   config.ledc_timer = LEDC_TIMER_0;
@@ -92,6 +93,8 @@ void takePhoto(){
   if (!fb){
     Serial.println("Camera capture failed");
   }
+  Serial.println("Buffer Länge: " + fb->len);
+  Serial.println("Foto funktioniert");
 }
 
 // Wird später implementiert
@@ -100,6 +103,7 @@ void cuttingPhoto(){
 }
 
 void transmitting(){
+  Serial.println("In transmitting");
   int photosize = fb->len;
   Serial.println("Größe des Fotos: " + photosize);
   currentTransmitPosition = 0;
@@ -108,10 +112,11 @@ void transmitting(){
   uint8_t message[] = {0x01, totalTransmitPackages >> 8, (byte) totalTransmitPackages}; // Wird auf 3 Bytes geteilt,
   // beim Empfänger wird totalTransmitPackages wieder aufgebaut.
 
+  Serial.println("Wird gesendet");
 
   //Empfänger sagen, dass eine Datei gesendet wird
   sendData(message, sizeof(message));
-
+  Serial.println("Wurde gesendet");
 }
 
 // Reaktion vom Empfänger
@@ -130,6 +135,7 @@ void OnDataSent(const uint8_t * mac_addr, esp_now_send_status_t status) {
 }
 
 void sendNextPackage(){
+  Serial.println("Nächstes Paket senden , Z 137");
   sendnextPackageFlag = 0;
 
   //if is after the last package
@@ -137,6 +143,17 @@ void sendNextPackage(){
     currentTransmitPosition = 0;
     totalTransmitPackages = 0;
     Serial.println("Datei gesendet.");
+    Serial.println("Byte ausgabe, potentiell hier error, Z 145");
+    uint8_t j = 0;
+      for (int i = 0; i < ceil(totalTransmitPackages * maxPackageSize); i++){
+        if (j >= 240){
+          Serial.println("");
+        }else{
+          Serial.print(fb->buf[i] + " ");
+        }
+
+      }
+    Serial.println("Ausgabe hat funktioniert, Z. 155");
     esp_camera_fb_return(fb);
     return;
   }
@@ -150,31 +167,31 @@ void sendNextPackage(){
     dataSize = fb->len - ((totalTransmitPackages - 1) - maxPackageSize);
 
     Serial.println(" last dataSize Package: " + dataSize);
-
-    //datamessagearray
-    uint8_t messageArray[dataSize + 3]; // die ersten 3 Einträge ist die Übermittlung von Operator und derzeitige Position vom Paket (16 Bit aufgeteilt auf 2 Byte)
-    messageArray[0] = 0x02;
-
-    //hier wäre file.seek und currentTransmitPosition die um eins erhöht wird
-    currentTransmitPosition ++;
-
-    messageArray[1] = currentTransmitPosition >> 8;
-    messageArray[2] = (byte) currentTransmitPosition;
-
-    uint16_t pos = currentTransmitPosition * maxPackageSize; //AChtung falls die Bilder größer oder mehrere gesendet wird
-
-    for (int i = 0; i < dataSize; i++){
-        messageArray[3+i] = fb->buf[pos + i];
-    }
-
-    sendData(messageArray, sizeof(messageArray));
   }
+
+  //datamessagearray
+  uint8_t messageArray[dataSize + 3]; // die ersten 3 Einträge ist die Übermittlung von Operator und derzeitige Position vom Paket (16 Bit aufgeteilt auf 2 Byte)
+  messageArray[0] = 0x02;
+
+  //hier wäre file.seek und currentTransmitPosition die um eins erhöht wird
+  currentTransmitPosition++;
+
+  messageArray[1] = currentTransmitPosition >> 8;
+  messageArray[2] = (byte) currentTransmitPosition;
+
+  uint16_t pos = currentTransmitPosition * maxPackageSize; //AChtung falls die Bilder größer oder mehrere gesendet wird
+
+  for (int i = 0; i < dataSize; i++){
+      messageArray[3+i] = fb->buf[pos + i];
+  }
+  sendData(messageArray, sizeof(messageArray));
+  Serial.println("Paket wurde gesendet, Z.187");
 }
 
 //Nur für das senden zuständig
 void sendData(uint8_t* dataArray, uint8_t arrayLength){
   //const uint8_t *peer_addr = slave.peer_addr; //Benötigt?
-
+  Serial.println("Daten senden, Z. 193");
   esp_err_t result = esp_now_send(broadcastAddress, dataArray, arrayLength);
 
   if (result == ESP_OK) {
