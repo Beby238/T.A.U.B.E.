@@ -62,18 +62,18 @@ void initCamera(){
   //config.pixel_format = PIXFORMAT_RGB565; // for face detection/recognition
   config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
   config.fb_location = CAMERA_FB_IN_PSRAM;
-  config.jpeg_quality = 12;
+  config.jpeg_quality = 60;
   config.fb_count = 2;
 
   Serial.println("psramFound() = " + String(psramFound()));
 
   if (psramFound()) {
-    config.frame_size = FRAMESIZE_SVGA; //FRAMESIZE_UXGA; // FRAMESIZE_ + QVGA|CIF|VGA|SVGA|XGA|SXGA|UXGA //FRAMESIZE_QVGA
-    config.jpeg_quality = 12;
+    config.frame_size = FRAMESIZE_96X96; //FRAMESIZE_UXGA; // FRAMESIZE_ + QVGA|CIF|VGA|SVGA|XGA|SXGA|UXGA //FRAMESIZE_QVGA
+    config.jpeg_quality = 60;
     config.fb_count = 2;
   } else {
     config.frame_size = FRAMESIZE_SVGA;
-    config.jpeg_quality = 12;
+    config.jpeg_quality = 62;
     config.fb_count = 1;
   }
 
@@ -145,17 +145,6 @@ void sendNextPackage(){
     //totalTransmitPackages = 0;
     Serial.println("Datei komplett gesendet.");
     Serial.println("Byte ausgabe, potentiell hier error, Z 145");
-    /*
-    uint8_t j = 0;
-      for (int i = 0; i < ceil(totalTransmitPackages * maxPackageSize); i++){
-        if ((i + 1)% 50 == 0){
-          Serial.println("");
-        }else{
-          Serial.print(String(fb->buf[i]) + " ");
-        }
-
-      }
-    */
     currentTransmitPosition = 0;
     totalTransmitPackages = 0;
     //Serial.println("Keine Byteausgabe eingestellt 160");
@@ -189,13 +178,14 @@ void sendNextPackage(){
 
   for (int i = 0; i < dataSize; i++){
       messageArray[3+i] = fb->buf[pos + i];
-      if ((i+1)%35 == 0){
+      if ((i+1)%40 == 0){
+        Serial.println("");
         Serial.println("");
       }else{
+        //Serial.print(String(fb->buf[currentTransmitPosition * maxPackageSize + 1]));
         Serial.print(String(fb->buf[pos + i+3]));
         Serial.print(" ");
       }
-
   }
   sendData(messageArray, sizeof(messageArray));
   //Serial.println("Paket wurde gesendet, Z.187");
