@@ -25,7 +25,7 @@
 // Esp32S3, kann auch automatisiert verlaufen mit SSID
 uint8_t broadcastAddress[] = {0xFC, 0x01, 0x2C, 0xD1, 0xF6, 0xD4};
 
-camera_fb_t *fb = NULL;
+camera_fb_t* fb = NULL;
 
 //Daten von Peer speichern (für die Verbindung wichtig)
 esp_now_peer_info_t peerInfo;
@@ -37,7 +37,6 @@ int totalTransmitPackages = 0;
 uint8_t sendnextPackageFlag = 0;
 
 void initCamera(){
-  Serial.println("Foto Setup");
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
   config.ledc_timer = LEDC_TIMER_0;
@@ -53,24 +52,24 @@ void initCamera(){
   config.pin_pclk = PCLK_GPIO_NUM;
   config.pin_vsync = VSYNC_GPIO_NUM;
   config.pin_href = HREF_GPIO_NUM;
-  config.pin_sccb_sda = SIOD_GPIO_NUM;
-  config.pin_sccb_scl = SIOC_GPIO_NUM;
+  config.pin_sscb_sda = SIOD_GPIO_NUM;
+  config.pin_sscb_scl = SIOC_GPIO_NUM;
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;
-  config.frame_size = FRAMESIZE_UXGA;
+  config.frame_size = FRAMESIZE_SVGA;
   config.pixel_format = PIXFORMAT_JPEG;  // for streaming
   //config.pixel_format = PIXFORMAT_RGB565; // for face detection/recognition
   config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
   config.fb_location = CAMERA_FB_IN_PSRAM;
   config.jpeg_quality = 12;
-  config.fb_count = 1;
+  config.fb_count = 2;
 
   Serial.println("psramFound() = " + String(psramFound()));
 
   if (psramFound()) {
-    config.frame_size = FRAMESIZE_QVGA; //FRAMESIZE_UXGA; // FRAMESIZE_ + QVGA|CIF|VGA|SVGA|XGA|SXGA|UXGA //FRAMESIZE_QVGA
-    config.jpeg_quality = 2;
+    config.frame_size = FRAMESIZE_SVGA; //FRAMESIZE_UXGA; // FRAMESIZE_ + QVGA|CIF|VGA|SVGA|XGA|SXGA|UXGA //FRAMESIZE_QVGA
+    config.jpeg_quality = 12;
     config.fb_count = 2;
   } else {
     config.frame_size = FRAMESIZE_SVGA;
@@ -93,8 +92,10 @@ void takePhoto(){
   if (!fb){
     Serial.println("Camera capture failed");
   }
-  Serial.println("Buffer Länge: " + fb->len);
+  Serial.println("Buffer Länge: " + (String)fb->len);
   Serial.println("Foto funktioniert");
+
+  transmitting();
 }
 
 // Wird später implementiert
@@ -105,7 +106,8 @@ void cuttingPhoto(){
 void transmitting(){
   Serial.println("In transmitting");
   int photosize = fb->len;
-  Serial.println("Größe des Fotos: " + photosize);
+  Serial.println("Größe des Fotos: " + (String)photosize);
+  Serial.println("Nach der Größe des Fotos");
   currentTransmitPosition = 0;
   totalTransmitPackages = ceil(photosize / maxPackageSize);
   Serial.println("Packetanzahl: " +  totalTransmitPackages);
@@ -191,7 +193,7 @@ void sendNextPackage(){
 //Nur für das senden zuständig
 void sendData(uint8_t* dataArray, uint8_t arrayLength){
   //const uint8_t *peer_addr = slave.peer_addr; //Benötigt?
-  Serial.println("Daten senden, Z. 193");
+  Serial.println("Daten senden, Z. 195");
   esp_err_t result = esp_now_send(broadcastAddress, dataArray, arrayLength);
 
   if (result == ESP_OK) {
@@ -243,17 +245,20 @@ void setup(){
     Serial.println("Failed to add peer");
     return;
   }
+  //esp_camera_fb_return(fb);
 }
 
 void loop(){
-
+  //Serial.println("Im Loop, Z 249");
 
 
   //foto Schießen, falls weder gesendet oder noch kein Foto geschossen wurde
   if (!sendnextPackageFlag && !tookPhotoFlag && Serial.available() > 0 && Serial.read() == 'f'){
     tookPhotoFlag = 1;
+    Serial.println("Foto aufnehmen, Z 253");
     takePhoto();
   }
+
 
   //Falls nächstes Packet gesendet wird
   if(sendnextPackageFlag){
