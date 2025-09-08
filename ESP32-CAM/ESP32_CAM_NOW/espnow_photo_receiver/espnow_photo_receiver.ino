@@ -14,7 +14,7 @@ uint8_t* fb_ptr = 0;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
-  pinMode(4, INPUT); //oder wenn esp32s3 LED_BUILTIN
+  //pinMode(4, INPUT); //oder wenn esp32s3 LED_BUILTIN
 
     // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
@@ -25,19 +25,20 @@ void setup() {
     Serial.println("Error initializing ESP-NOW");
     return;
   }
-    esp_now_register_recv_cb(esp_now_recv_cb_t(OnDataRecv));
+  esp_now_register_recv_cb(esp_now_recv_cb_t(OnDataRecv));
+  Serial.println("psramFound() = " + String(psramFound()));
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-
 }
 
 //initiert psram;
 void reservepsram(int size){
+  //Serial.println("PSRAM wird festgelegt 38");
   //reserviert z.B. 1 Kb undfb_bufferzeigt auf die niedrigste Adresse
     //ps_malloc und malloc geben einen void* zurück, muss umgewandelt werden (durch Void flexibel)
- fb_buffer = ps_malloc(size); //Nur Beispiel
+  fb_buffer = ps_malloc(size); //Nur Beispiel
 
   fb_ptr = (uint8_t*)fb_buffer; //Typumwandlung für bytewqeise Zugriffe
 
@@ -46,22 +47,25 @@ void reservepsram(int size){
 
   //heap_caps_get_largest_free_block(), um auf Fragmentierung zu achten
   //fb_ptr[42] = 0;
+  //Serial.println("RAM erfolgreich festgelegt 50");
 }
 
 void OnDataRecv(const uint8_t * mac, const uint8_t *indata, int len) {
   //memcpy(..., incomingData, sizeof(myData)); //memcpy: destintation, source, size
     //potentiell gut
+  //Serial.println("Daten kommen rein, 54");
   switch(*indata++){
 
     case 0x01:
-      Serial.println("Start new Photo transfer.");
+      //Serial.println("Größe kommt an 59");
+      //Serial.println("Start new Photo transfer.");
       currentTransmitPosition = 0;
       totalTransmitPackages = (*indata++) << 8 | *indata;
         //Zuerst wird Pointer initialisiert, dann um eins inkrementiert und dann wird vorherhiger Wert gelesen
       Serial.println("totalTransmitPackages = " + String(totalTransmitPackages));
 
       //psram initieren und schreiben
-      /// XXX: Kann sein dass die RAM Größe nicht ausreicht
+      /// XXX: Kaunn sein dass die RAM Größe nicht ausreicht
       reservepsram(ceil(totalTransmitPackages * maxpacksize));
 
       break;
@@ -70,31 +74,46 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *indata, int len) {
       //Nach Positionangabe, soll es zum Datenbyte gehen
         //Der Sender bestimmt die Position
       currentTransmitPosition = (*indata++) << 8 | *indata++;
-      Serial.println("package Number = " + String(currentTransmitPosition));
-
+      Serial.println("");
+      Serial.println("Packet Nummer = " + String(currentTransmitPosition));
+      Serial.println("");
+      //Serial.println("Daten kommen 78");
       /// XXX: !!!!!!ACHTUNG KRITISCHE STELLE
 
-      for (int i = 0; i < (len - 3); i++) {// HIER ACHTEN WEGEN -3!!!!!!
+      for (int i = 0; i < len; i++) {// HIER ACHTEN WEGEN (len - 3)!!!!!!
         
         /// XXX: Die Zuweisung zur Adresse kann falsch sein!!!
 
         fb_ptr[currentTransmitPosition * totalTransmitPackages + i] = *indata++;
       }
-
+      for (int i = 0; i < len; i++){
+        if ((i + 1)% 35 == 0){
+          Serial.println("");
+        }else{
+        Serial.print(String(fb_ptr[currentTransmitPosition * totalTransmitPackages + i + 3]));
+        Serial.print(" ");
+        }
+      }
       if (currentTransmitPosition == totalTransmitPackages){
         //Code um in Webbasiert anzuzeigen, keine Lust auf SD-Karte:
         Serial.println("Datentransfer fertig");
         //Bytes anzeigen
+        /*
         uint8_t j = 0;
         for (int i = 0; i < ceil(totalTransmitPackages * maxpacksize); i++){
           if (j >= 240){
-            Serial.println("");
+            Serial.println("\n");
           }else{
-            Serial.print(fb_ptr[i] + " ");
+            Serial.print((String)fb_ptr[i] + " ");
           }
 
         }
+        */
+        free(fb_buffer);
+        fb_ptr = 0;
+        Serial.println("Sendung fertig");
       }
-      
+      //Serial.println("Daten abgerufen.");
+      delay(10);
   }
 }
