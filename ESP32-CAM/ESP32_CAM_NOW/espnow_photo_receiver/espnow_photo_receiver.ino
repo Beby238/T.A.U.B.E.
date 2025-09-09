@@ -5,38 +5,31 @@
 #define maxpacksize 240.0
 
 //die JPEGCLass wird vielleicht gebraucht um es anzuzeigen
-const char *ssid = "GalaxyA56F23";
-const char *password = "dxch1196";
+//const char *ssid = "GalaxyA56F23";
+//const char *password = "dxch1196";
 
 int currentTransmitPosition = 0;
 int totalTransmitPackages = 0;
 
+WebServer server(80);
+
 byte bildvorhanden = 0;
+byte servergestartet = 0;
 
 void* fb_buffer = 0;
 uint8_t* fb_ptr = 0;
+size_t jpegSize = 0;
 
-WebServer server(80);
-
-void handleImage() {
-  //server.send_P(200, "image/jpeg", (const char*)fb_ptr, totalTransmitPackages * maxpacksize);
-  server.sendHeader("Content-Type", "image/jpeg");
-  server.sendHeader("Content-Length", String(totalTransmitPackages * maxpacksize));
-  server.send(200, "image/jpeg", (const char*)fb_ptr);
-}
-
-// Handler für die Startseite
-void handleRoot() {
-  server.send(200, "text/html", "<html><body><h1>ESP32-S3 Webserver</h1><img src='/img' /></body></html>");
-}
+void startingserver();
+void handleImage();
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   //pinMode(4, INPUT); //oder wenn esp32s3 LED_BUILTIN
 
-    // Set device as a Wi-Fi Station
-  WiFi.mode(WIFI_MODE_APSTA);
+    // WIFI_AP_STA, falls man NOW und WIFI verwenden will --> nur bei AsncWebserver möglich
+  WiFi.mode(WIFI_AP_STA);
 
     // Init ESP-NOW
   esp_now_init();
@@ -46,26 +39,19 @@ void setup() {
   }
   esp_now_register_recv_cb(esp_now_recv_cb_t(OnDataRecv));
   Serial.println("psramFound() = " + String(psramFound()));
-
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("Verbunden mit WLAN");
-  Serial.print("IP-Adresse: ");
-  Serial.println(WiFi.localIP());
-
-  // Routen definieren
-  server.on("/", HTTP_GET, handleRoot);
-  server.on("/img", HTTP_GET, handleImage);
-
-  // Server starten
-  server.begin();
 }
 
 void loop() {
-  server.handleClient();
+  if (bildvorhanden && !servergestartet){
+    Serial.println("Webserver wird gestartet");
+    startingserver();
+    Serial.println("****************** sollte nur einmal da sein");
+    servergestartet = 1;
+    bildvorhanden = 0;
+  }
+  if (servergestartet){
+      server.handleClient();
+  }
 }
 
 //initiert psram;
@@ -102,6 +88,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *indata, int len) {
       //psram initieren und schreiben
       /// XXX: Kaunn sein dass die RAM Größe nicht ausreicht
       reservepsram(ceil(totalTransmitPackages * maxpacksize));
+      jpegSize = ceil(totalTransmitPackages * maxpacksize);
 
       break;
 
@@ -134,8 +121,8 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *indata, int len) {
         Serial.println("Datentransfer fertig");
         //Bytes anzeigen
         bildvorhanden = 1;
-        fb_ptr = 0;
-        free(fb_buffer);
+        //fb_ptr = 0;
+        //free(fb_buffer);
         Serial.println("Sendung fertig");
       }
       //Serial.println("Daten abgerufen.");

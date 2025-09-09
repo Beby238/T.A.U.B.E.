@@ -141,20 +141,17 @@ void sendNextPackage(){
 
   //if is after the last package
   if (currentTransmitPosition == totalTransmitPackages){
-    //currentTransmitPosition = 0;
-    //totalTransmitPackages = 0;
     Serial.println("Datei komplett gesendet.");
     Serial.println("Byte ausgabe, potentiell hier error, Z 145");
     currentTransmitPosition = 0;
     totalTransmitPackages = 0;
-    //Serial.println("Keine Byteausgabe eingestellt 160");
     esp_camera_fb_return(fb);
     return;
   }
 
   //Array Packet senden:
   int dataSize = maxPackageSize;
-  //Wenn es die letzte Datei ist, muss das Paket angepasst werden
+  //Die FUnktion mach mit dem letzten Packet Probleme muss angepasst werde
   if (currentTransmitPosition == totalTransmitPackages - 1){
     Serial.println("\n************************");
     Serial.println("Letztes PAKET! 171");
