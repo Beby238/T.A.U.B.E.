@@ -52,8 +52,8 @@ void initCamera(){
   config.pin_pclk = PCLK_GPIO_NUM;
   config.pin_vsync = VSYNC_GPIO_NUM;
   config.pin_href = HREF_GPIO_NUM;
-  config.pin_sscb_sda = SIOD_GPIO_NUM;
-  config.pin_sscb_scl = SIOC_GPIO_NUM;
+  config.pin_sccb_sda = SIOD_GPIO_NUM;
+  config.pin_sccb_scl = SIOC_GPIO_NUM;
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;
@@ -235,7 +235,9 @@ void setup(){
 
     // Register peer, kann durch automatische Suche ersetzt werden
   memcpy(peerInfo.peer_addr, broadcastAddress, 6);
-  peerInfo.channel = 0;  
+
+  /// XXX: Channel Problem bei WIFI --> nachsehen
+  peerInfo.channel = 0; 
   peerInfo.encrypt = false;
 
     // Add peer, kann durch automatische Suche ersetzt werden        

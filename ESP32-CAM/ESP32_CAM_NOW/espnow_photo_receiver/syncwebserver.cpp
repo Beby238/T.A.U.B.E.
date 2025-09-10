@@ -1,8 +1,9 @@
+//ES wird nur das Bild angezeigt
 #include <WiFi.h>
 #include <WebServer.h>
 
 const char *ssid = "GalaxyA56F23";
-const char *password = "dxch1196";
+const char *password = "d10doklol1092";
 
 //mittels extern, wird die gleiche Adresse auf pointer gezeigt
 extern void* fb_buffer;
@@ -11,10 +12,14 @@ extern size_t jpegSize;
 
 extern WebServer server;
 
+
+/// XXX: die funktion wird nciht aufgerufen
 void handleImage() {
   Serial.println("Sind im handleImage");
   if (fb_ptr != nullptr && jpegSize > 0){
     Serial.println("Bild wird abgerufen!");
+
+    server.sendHeader("Content-Type", "image/jpeg");
     server.send_P(200, "image/jpeg", (const char*)fb_ptr, jpegSize);
   }else{
     server.send(404, "text/plain", "Kein Bild verfügbar");
