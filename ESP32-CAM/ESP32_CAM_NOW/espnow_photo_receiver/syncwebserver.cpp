@@ -2,7 +2,6 @@
 #include <WiFi.h>
 #include <WebServer.h>
 
-
 //mittels extern, wird die gleiche Adresse auf pointer gezeigt
 //extern void* fb_buffer;
 extern uint8_t* fb_ptr;
@@ -13,7 +12,7 @@ extern WebServer server;
 
 /// XXX: die funktion wird nciht aufgerufen
 void handleImage() {
-  Serial.println("Sind im handleImage");
+  //Serial.println("Sind im handleImage");
   if (fb_ptr != nullptr && photosize > 0){
     Serial.println("Bild wird abgerufen!");
 
@@ -37,7 +36,7 @@ void startingserver(){
   Serial.println("Verbunden mit WLAN");
   Serial.print("IP-Adresse: http://");
   Serial.println(WiFi.localIP());
-  Serial.println("JPEG Größe: " + String(photosize));
+  //Serial.println("JPEG Größe: " + String(photosize));
 
   //Dafür benötige http routen layout
   //server.on("/img", HTTP_GET, handleImage);
@@ -46,5 +45,5 @@ void startingserver(){
   server.on("/", handleImage);
 
   server.begin();
-  Serial.println("Webserver gestartet");
+  //Serial.println("Webserver gestartet");
 }

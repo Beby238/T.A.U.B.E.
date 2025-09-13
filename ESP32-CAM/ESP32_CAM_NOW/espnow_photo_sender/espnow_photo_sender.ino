@@ -20,7 +20,8 @@
 #define HREF_GPIO_NUM  23
 #define PCLK_GPIO_NUM  22
 
-#define maxpackage 200
+//Die max. Größe vom Paket liegt zwischen 1000 und 1500 Bytes
+#define maxpackage 1000
 
 
 uint8_t broadcastAddress[] = {0xFC, 0x01, 0x2C, 0xD1, 0xF6, 0xD4};
@@ -72,9 +73,13 @@ void initCamera(){
   config.jpeg_quality = 12;
   config.fb_count = 2;
 
+// FRAMESIZE_QQVGA=160x120, QCIF=176x144, HQVGA=240x176, QVGA=320x240, CIF=352x288, VGA=640x480
+// FRAMESIZE_SVGA=800x600, XGA=1024x768, SXGA=1280x1024, UXGA=1600x1200
+// Hinweis: Höhere Auflösungen benötigen PSRAM und senken die Framerate.
+
   if (psramFound()) {
-    config.frame_size = FRAMESIZE_QQVGA;//FRAMESIZE_96X96; //FRAMESIZE_UXGA; // FRAMESIZE_ + QVGA|CIF|VGA|SVGA|XGA|SXGA|UXGA //FRAMESIZE_QVGA
-    config.jpeg_quality = 63;
+    config.frame_size = FRAMESIZE_SXGA;
+    config.jpeg_quality = 20;
     config.fb_count = 2;
   } else {
     config.frame_size = FRAMESIZE_VGA;
@@ -94,10 +99,15 @@ void initCamera(){
 void takePhoto(){
   tookPhotoFlag = 0;
   Serial.println("Foto aufnehmen");
+
+  //Je länger die LED an ist, desto heller ist es --> Kamera Einstellungen machen auch was aus
+  digitalWrite(4, HIGH);
+  delay(300);
   fb = esp_camera_fb_get();
   if (!fb){
     Serial.println("Camera capture failed");
   }
+  digitalWrite(4, LOW);
   Serial.println("");
   transmitting();
 }
@@ -135,12 +145,14 @@ void sendnextPaket(){
   photo_info.phase = 0x02;
   for (int i = 0; i < dataSize; i++){
     photo_info.data[i] = fb->buf[photo_info.position * maxpackage + i];
+    /*
     if ((i+1) % 40 == 0){
       Serial.println("");
     }
     Serial.print(photo_info.data[i], HEX);
     Serial.print(" ");
-    }
+    */
+  }
   photo_info.position++;
   sendData();
 }
@@ -204,18 +216,12 @@ void setup() {
     Serial.println("Failed to add peer");
     return;
   }
+
+  pinMode(4, OUTPUT);
+  digitalWrite(4, LOW); // LED aus
+
   Serial.println("psramFound() = " + String(psramFound()));
-  /*
-  daten = (uint8_t*)malloc(240);
-  if (daten == NULL){
-    Serial.println("Kein Speicher für Pointer");
-  }
-  */
-  /*
-  for (int i = 0; i < 200 ; i++){
-    daten[i] = random(0, 241);
-  }
-  */
+
   initCamera();
   Serial.println("Größe vom Struct: " + String(sizeof(photo_info)));
 }

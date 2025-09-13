@@ -3,7 +3,7 @@
 #include <WebServer.h>
 #define CHANNEL 0
 
-#define maxpackage 200
+#define maxpackage 1000
 
 WebServer server(80);
 
@@ -45,10 +45,11 @@ void loop() {
   if (bildvorhanden && !servergestartet){
     Serial.println("Webserver wird gestartet");
     //startingserver();
-    Serial.println("****************** sollte nur einmal da sein");
+    Serial.println("******************");
     servergestartet = 1;
     bildvorhanden = 0;
-    Serial.println("Daten anzeigen:");
+    //Serial.println("Daten anzeigen:");
+    /*
     for (int i = 0; i < photo_info.jpegsize; i++){
       if ((i +1)% 40 == 0){
         Serial.println("");
@@ -57,8 +58,9 @@ void loop() {
       Serial.print(zahl, HEX);
       Serial.print(" ");
     }
-    Serial.println("");
-    Serial.println("Daten angezeigt.");
+    */
+    //Serial.println("");
+    //Serial.println("Daten angezeigt.");
     startingserver();
   }
   
@@ -86,7 +88,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingdata, int len) {
     
     case 0x02:
       //photo_info.data muss vielleicht allokiert werden
-      Serial.println("Stück Position: " + String(photo_info.position));
+      //Serial.println("Stück Position: " + String(photo_info.position));
       int dataSize = maxpackage;
 
       //Sollte potentiell als letztes gehen
