@@ -30,6 +30,17 @@
 - für die Board LED: GPIO 4
 - Siehe ESP32-CAM für die Konfieguration
 
+# Lafvin ESP32 S3 Wroom
+- https://super-starter-kit-for-esp32-s3-wroom.readthedocs.io/en/latest/preparation/Notes_For_GPIO.html
+  - Für die Kamera stehen die Belegung
+-  https://super-starter-kit-for-esp32-s3-wroom.readthedocs.io/en/latest/index.html
+-  Laut der Anleitung ist das passende Arduino Kamera Modell: CAMERA_MODEL_ESP32S3_EYE
+-  Es gibt noch, einen VideoWebServer zu erstellen (unter Camera Web Server):
+  -  https://super-starter-kit-for-esp32-s3-wroom.readthedocs.io/en/latest/1.C_Tutorial/25_camera_web_server.html
+
+
+
+
 ## ESP IDF:
 - https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/index.html
 - https://github.com/espressif/esp-idf
