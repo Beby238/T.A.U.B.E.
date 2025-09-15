@@ -35,6 +35,16 @@
 - https://www.youtube.com/watch?v=0s4Bm9Ar42U
 - https://github.com/talofer99/ESP32CAM-Capture-and-send-image-over-esp-now/blob/master/Camera/Camera.ino
   - config.grab_mode = CAMERA_GRAB_LATEST; // Um das letzte Bild zu bekommen
+ 
+## ESP AI (wahrscheinlich mit Edge Impulse):
+- https://github.com/espressif/esp-who/tree/master
+- https://arxiv.org/pdf/2105.12931
+- https://www.makerguides.com/train-an-object-detection-model-with-edge-impulse-for-esp32-cam/?utm_source=chatgpt.com
+- https://circuitdigest.com/microcontroller-projects/esp32-cam-face-recognition-using-edge-impulse?utm_source=chatgpt.com
+- https://developer.espressif.com/blog/hand-gesture-recognition-on-esp32-s3-with-esp-deep-learning/
+- https://github.com/espressif/esp-dl/tree/master
+- https://arm-software.github.io/CMSIS_6/latest/General/index.html
+- 
 
 ## Using PSRAM
 - https://thingpulse.com/esp32-how-to-use-psram/
