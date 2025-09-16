@@ -44,7 +44,8 @@
 - https://developer.espressif.com/blog/hand-gesture-recognition-on-esp32-s3-with-esp-deep-learning/
 - https://github.com/espressif/esp-dl/tree/master
 - https://arm-software.github.io/CMSIS_6/latest/General/index.html
-- 
+- Tutorial für Objekt Erkennung (Face Detectio/Recognition)
+  - https://docs.edgeimpulse.com/tutorials/end-to-end/object-detection-centroids
 
 ## Using PSRAM
 - https://thingpulse.com/esp32-how-to-use-psram/
