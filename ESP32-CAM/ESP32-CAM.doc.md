@@ -35,6 +35,10 @@
 - https://www.youtube.com/watch?v=0s4Bm9Ar42U
 - https://github.com/talofer99/ESP32CAM-Capture-and-send-image-over-esp-now/blob/master/Camera/Camera.ino
   - config.grab_mode = CAMERA_GRAB_LATEST; // Um das letzte Bild zu bekommen
+- Foto schneiden:
+  - https://simplyexplained.com/blog/esp32-cam-cropping-images-on-device/
+- jpegzurgb umwandlung (ganz unten):
+  - https://stackoverflow.com/questions/66046097/esp32-store-rgb-from-decoded-jpeg-mcus-in-buffer
  
 ## ESP AI (wahrscheinlich mit Edge Impulse):
 - https://github.com/espressif/esp-who/tree/master
