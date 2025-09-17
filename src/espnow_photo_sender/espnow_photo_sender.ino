@@ -2,6 +2,9 @@
 #include <esp_now.h>
 #include <WiFi.h>
 
+//#include <TJpg_Decoder.h>
+#include "img_converters.h" // für jpgtorgb565
+
 #define PWDN_GPIO_NUM  32
 #define RESET_GPIO_NUM -1
 #define XCLK_GPIO_NUM  0
@@ -22,7 +25,11 @@
 
 //Die max. Größe vom Paket liegt zwischen 1000 und 1500 Bytes
 #define maxpackage 1000
+#define scale 2
 
+uint16_t* rgb_buf; //jpeg to rgb umwandlung
+int rgbwidth = 0;
+int rgbheight = 0;
 
 uint8_t broadcastAddress[] = {0xFC, 0x01, 0x2C, 0xD1, 0xF6, 0xD4};
 esp_now_peer_info_t peerInfo;
@@ -42,9 +49,9 @@ typedef struct photo_information {
 photo_information photo_info;
 
 camera_fb_t* fb = 0;
+camera_config_t config;
 
 void initCamera(){
-  camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
   config.ledc_timer = LEDC_TIMER_0;
   config.pin_d0 = Y2_GPIO_NUM;
@@ -108,8 +115,67 @@ void takePhoto(){
     Serial.println("Camera capture failed");
   }
   digitalWrite(4, LOW);
-  Serial.println("");
+  
+  jpegtoRGB();
+  photocutting();
   transmitting();
+}
+
+
+/// XXX: Achtung das rgb Bild ist kleiner als das jpeg wegen RAM nutzung
+void jpegtoRGB(){
+    rgbwidth = 0;
+    rgbheight = 0;
+  switch(config.frame_size){
+    case FRAMESIZE_QQVGA: rgbwidth = 160/scale; rgbheight = 120/scale; break;
+    case FRAMESIZE_240X240: rgbwidth = 240/scale; rgbheight = 240/scale; break;
+    case FRAMESIZE_QVGA: rgbwidth = 320/scale; rgbheight = 240/scale; break;
+    case FRAMESIZE_VGA: rgbwidth = 640/scale; rgbheight = 480/scale; break;
+    case FRAMESIZE_SVGA: rgbwidth = 800/scale; rgbheight = 600/scale; break;
+    case FRAMESIZE_XGA: rgbwidth = 1024/scale; rgbheight = 768/scale; break;
+    case FRAMESIZE_SXGA: rgbwidth = 1280/scale; rgbheight = 1024/scale; break;
+    default: Serial.println("Unbekannte Auflösung"); break;
+  }
+    rgb_buf = (uint16_t*) ps_malloc(rgbwidth * rgbheight * sizeof(uint16_t));
+
+    //jpg2rgb565 hat ein uint8_t* out
+    //Folgende Skalierung gibt es:
+      /*
+      typedef enum {
+      JPG_SCALE_NONE, //Originalgröße
+      JPG_SCALE_2X, //1/2 Originalgröße
+      JPG_SCALE_4X, //1/4 Breite
+      JPG_SCALE_8X, //1/8 Breite
+      JPG_SCALE_MAX = JPG_SCALE_8X
+      } jpg_scale_t;
+      */
+      ///XXX: AUF SCALE ACHTEN MIT JPG_SCALE_...!!!!!!!!!!!!!!!!!!!
+    if(jpg2rgb565(fb->buf, fb->len, (uint8_t*)rgb_buf, JPG_SCALE_2X)){
+      Serial.println("Jpeg zu rgb565 konvertierung.");
+    }else{
+      Serial.println("kein Erfolg bei jpeg zu rgb565");
+    }
+}
+
+//Der rgb_buf ist global, wird nicht eingefügt
+void photocutting(unsigned int cropLef, unsigned int cropRight,
+  unsigned int cropTop, unsigned int cropBottom){
+
+  //Achtung die mal 2 wäre, wenn man nicht uint16_t rgb_buf deklariert hat
+  /// XXX: Dennoch darauf achten
+  unsigned int maxTopIndex = cropTop * rgbwidth;
+  unsigned int minBottomIndex = ((rgbwidth*rgbheight) - (cropBottom * rgbwidth));
+  unsigned short maxX = rgbwidth - cropRight; //In Pixels
+  unsigned short newWidth = rgbwidth - cropLeft - cropRight;
+  unsigned short newHeight = rgbheight -
+  
+
+  //JPEG ist kompromiert und muss in rgb oder greyscal umgewandelt werden
+    //Dekodieren mit: TJpgDec() (esp_jpg_decode in esp-idf)
+    //Mit memcpy den gewünschten Bereich rauskopieren
+    //IN JPEG umwandeln mit fmt2jpg()
+
+
 }
 
 void transmitting(){
@@ -224,6 +290,7 @@ void setup() {
 
   initCamera();
   Serial.println("Größe vom Struct: " + String(sizeof(photo_info)));
+
 }
 
 void loop() {
