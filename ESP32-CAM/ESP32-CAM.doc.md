@@ -39,6 +39,9 @@
   - https://simplyexplained.com/blog/esp32-cam-cropping-images-on-device/
 - jpegzurgb umwandlung (ganz unten):
   - https://stackoverflow.com/questions/66046097/esp32-store-rgb-from-decoded-jpeg-mcus-in-buffer
+    - also mit #include "img_converters.h", und dessen Funktion jpg2rgb565
+  - potentiell auch mit TJPG_Decoder:
+    -   https://github.com/Bodmer/TJpg_Decoder/blob/master/examples/FLash_array/Flash_Jpg/Flash_Jpg.ino
  
 ## ESP AI (wahrscheinlich mit Edge Impulse):
 - https://github.com/espressif/esp-who/tree/master
