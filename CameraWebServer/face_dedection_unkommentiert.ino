@@ -32,7 +32,7 @@
 #include <ESPAsyncWebServer.h>
 
 
-//globale Variablen
+//globale Variablen fuer Rechteck
 volatile int faceX = -1;
 volatile int faceY = -1;
 volatile int faceW = -1;
@@ -44,6 +44,7 @@ const int CAMERA_HEIGHT = 240;
 const int MODEL_WIDTH = EI_CLASSIFIER_INPUT_WIDTH;
 const int MODEL_HEIGHT = EI_CLASSIFIER_INPUT_HEIGHT;
 
+// Berechnunng damit Rechteck korrekt skaliert wird
 float scaleX = (float)CAMERA_WIDTH / EI_CLASSIFIER_INPUT_WIDTH;
 float scaleY = (float)CAMERA_HEIGHT / EI_CLASSIFIER_INPUT_HEIGHT;
 
@@ -347,7 +348,7 @@ void loop()
             continue;
         }
 
-                // Mittelpunkt berechnen
+                // Mittelpunkt berechnen, wird nur im Seriellen Monitor ausgegeben
     uint32_t centerX = bb.x + bb.width / 2;
     uint32_t centerY = bb.y + bb.height / 2;
 
