@@ -26,9 +26,8 @@ size_t jpegSize = 0;
 
 byte tookPhotoFlag = 0;
 byte webserverFLAG = 0;
-
-const char *ssid = "GalaxyA56F23";
-const char *password = "d10doklol1092";
+//const char *ssid = "xxxx";
+//const char *password = "xxxx";
 
 
 WebServer server(80);
