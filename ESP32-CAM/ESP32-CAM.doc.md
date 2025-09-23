@@ -45,6 +45,9 @@
 - Hinweise zu JPEG Verarbeitung:
   - https://github.com/espressif/esp32-camera/issues/422?utm_source=chatgpt.com
  
+## ESP async webserver
+- https://randomnerdtutorials.com/esp32-async-web-server-espasyncwebserver-library/
+ 
 ## ESP AI (wahrscheinlich mit Edge Impulse):
 - https://github.com/espressif/esp-who/tree/master
 - https://arxiv.org/pdf/2105.12931
