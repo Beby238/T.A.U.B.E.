@@ -4,10 +4,6 @@
 #include <ESPAsyncWebServer.h>
 #include "esp_camera.h"
 
-// ==== WLAN ====
-const char *ssid = "Definitiv0909";
-const char *password = "6aD4bXjAEHNQD99m";
-
 //Für das Anzeigen wird nur der Buffer und die Länge gebraucht
 struct Image {
   uint8_t* buf = nullptr;
