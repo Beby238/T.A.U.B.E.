@@ -5,8 +5,8 @@
 #define maxpacksize 240.0
 
 //die JPEGCLass wird vielleicht gebraucht um es anzuzeigen
-//const char *ssid = "GalaxyA56F23";
-//const char *password = "dxch1196";
+//const char *ssid = "xxxx";
+//const char *password = "xxxx";
 
 int currentTransmitPosition = 0;
 int totalTransmitPackages = 0;
