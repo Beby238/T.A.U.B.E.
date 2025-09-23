@@ -4,6 +4,10 @@
 #include <ESPAsyncWebServer.h>
 #include "esp_camera.h"
 
+//const char *ssid = "xxxx";
+//const char *password = "xxxx";
+
+
 //Für das Anzeigen wird nur der Buffer und die Länge gebraucht
 struct Image {
   uint8_t* buf = nullptr;
