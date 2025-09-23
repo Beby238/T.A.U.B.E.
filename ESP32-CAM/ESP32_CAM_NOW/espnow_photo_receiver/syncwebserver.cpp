@@ -2,8 +2,8 @@
 #include <WiFi.h>
 #include <WebServer.h>
 
-const char *ssid = "GalaxyA56F23";
-const char *password = "d10doklol1092";
+//const char *ssid = "xxxx";
+//const char *password = "xxxx";
 
 //mittels extern, wird die gleiche Adresse auf pointer gezeigt
 extern void* fb_buffer;
