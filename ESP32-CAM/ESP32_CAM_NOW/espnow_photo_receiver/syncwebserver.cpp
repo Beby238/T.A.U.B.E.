@@ -3,11 +3,6 @@
 #include <WebServer.h>
 
 
-//const char *ssid = "GalaxyA56F23";
-//const char *password = "d10doklol1092";
-const char *ssid = "Definitiv0909";
-const char *password = "6aD4bXjAEHNQD99m";
-
 //mittels extern, wird die gleiche Adresse auf pointer gezeigt
 //extern void* fb_buffer;
 extern uint8_t* fb_ptr;
@@ -51,5 +46,7 @@ void startingserver(){
   server.on("/", handleImage);
 
   server.begin();
-  //Serial.println("Webserver gestartet");
+
+  Serial.println("Webserver gestartet");
 }
+

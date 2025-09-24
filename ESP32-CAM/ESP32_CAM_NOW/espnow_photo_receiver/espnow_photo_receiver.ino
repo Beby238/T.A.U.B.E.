@@ -3,7 +3,6 @@
 #include <WebServer.h>
 #define CHANNEL 0
 
-#define maxpackage 1000
 
 WebServer server(80);
 
