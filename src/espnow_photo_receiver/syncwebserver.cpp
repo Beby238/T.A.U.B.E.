@@ -1,40 +1,81 @@
-//ES wird nur das Bild angezeigt
+//Weitere Datei für F.R. ML
 #include <WiFi.h>
-#include <WebServer.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
 
+//Für das Anzeigen wird nur der Buffer und die Länge gebraucht
+struct Image {
+  uint8_t* buf = nullptr;
+  size_t len = 0;
+  String caption = "";
+};
 
-//const char *ssid = "GalaxyA56F23";
-//const char *password = "d10doklol1092";
-const char *ssid = "Definitiv0909";
-const char *password = "6aD4bXjAEHNQD99m";
+Image images[5]; // Bild anzeige anpassen
+int currentIndex = 0;
 
-//mittels extern, wird die gleiche Adresse auf pointer gezeigt
-//extern void* fb_buffer;
 extern uint8_t* fb_ptr;
 extern size_t photosize;
 
-extern WebServer server;
+extern AsyncWebServer server;
 
 
 /// XXX: die funktion wird nciht aufgerufen
-void handleImage() {
-  //Serial.println("Sind im handleImage");
-  if (fb_ptr != nullptr && photosize > 0){
-    Serial.println("Bild wird abgerufen!");
+void handleWorkload() {
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    String html = "<html><body>";
+    html += "<h2>ESP32-CAM Galerie</h2>";
+    for(int i=0;i<5;i++){
+      html += "<img id='img"+String(i)+"' src='/bild?id="+String(i)+"' width='500' height='360'><br>"; //Bild kann hier verzerrt aussehen
+       html += "<p id='caption"+String(i)+"'>"+images[i].caption+"</p><br>";
+    }
+   html += "<script>"
+            "setInterval(()=>{"
+            "for(let i=0;i<5;i++){"
+            "document.getElementById('img'+i).src='/bild?id='+i+'&t='+new Date().getTime();"
+            "document.getElementById('caption'+i).innerText = 'Bild ' + (i + 1);"
+            "}"
+            "}, 5000);"  // alle 2 Sekunden
+            "</script>";
+    html += "</body></html>";
+    request->send(200, "text/html", html);
+  });
 
-    server.sendHeader("Content-Type", "image/jpeg");
-    server.send_P(200, "image/jpeg", (const char*)fb_ptr, photosize);
-  }else{
-    server.send(404, "text/plain", "Kein Bild verfügbar");
+  server.on("/bild", HTTP_GET, [](AsyncWebServerRequest *request){
+  if (!request->hasParam("id")) {
+    request->send(400, "text/plain", "Missing id");
+    return;
   }
-  free(fb_ptr);
+  int id = request->getParam("id")->value().toInt();
+  if (id < 0 || id >= 5) {
+    request->send(404, "text/plain", "No image");
+    return;
+  }
+  AsyncWebServerResponse *response = request->beginResponse_P(200, "image/jpeg", images[id].buf, images[id].len);
+  request->send(response);
+  });
+}
+
+void loadbuffer(){
+  //das alte Bild wird gelöscht
+  if(images[currentIndex].buf){
+    free(images[currentIndex].buf);
+    images[currentIndex].buf = nullptr;
+  }
+
+  images[currentIndex].buf = (uint8_t*)ps_malloc(photosize);
+  if(images[currentIndex].buf){
+    memcpy(images[currentIndex].buf, fb_ptr, photosize);
+    images[currentIndex].len = photosize;
+    images[currentIndex].caption = "Bild " + String(currentIndex + 1);
+    currentIndex = (currentIndex + 1) % 5;
+  }
 }
  
 
 //Oder ins void setup() einfügen
 void startingserver(){
-  
-  WiFi.begin(ssid, password);
+  WiFi.begin(ssid, password);  
+  WiFi.printDiag(Serial);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
@@ -42,14 +83,12 @@ void startingserver(){
   Serial.println("Verbunden mit WLAN");
   Serial.print("IP-Adresse: http://");
   Serial.println(WiFi.localIP());
-  //Serial.println("JPEG Größe: " + String(photosize));
 
-  //Dafür benötige http routen layout
-  //server.on("/img", HTTP_GET, handleImage);
 
-  //Bild wird direkt angezeigt
-  server.on("/", handleImage);
+  handleWorkload();
 
   server.begin();
-  //Serial.println("Webserver gestartet");
+  Serial.println("Server gestartet");
 }
+
+

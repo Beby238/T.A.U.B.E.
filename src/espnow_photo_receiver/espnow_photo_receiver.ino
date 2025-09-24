@@ -1,17 +1,20 @@
 #include <esp_now.h>
 #include <WiFi.h>
-#include <WebServer.h>
-#define CHANNEL 0
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
 
 #define maxpackage 1000
 
-WebServer server(80);
+AsyncWebServer server(80);
 
 uint8_t *fb_ptr;
-byte bildvorhanden = 0;
-byte servergestartet = 0;
 int position = 0;
 int photosize;
+
+//Für die KI zur Benennung
+char caption = 0;
+
+byte bildvorhanden = 0;
 
 typedef struct photo_information {
   uint8_t phase;
@@ -24,53 +27,52 @@ typedef struct photo_information {
 photo_information photo_info;
 
 void startingserver();
-void handleImage();
+void loadbuffer();
+void handleWorkload();
 
 void setup() {
   Serial.begin(115200);
 
   // WIFI_AP_STA, falls man NOW und WIFI verwenden will --> nur bei AsncWebserver möglich
-  WiFi.mode(WIFI_AP_STA);
+  WiFi.mode(WIFI_AP_STA); //WIFI_AP_STA
+  startingserver();
+
+  server.begin();
+  Serial.println("Server gestartet");
 
   esp_now_init();
   if (esp_now_init() != ESP_OK) {
     Serial.println("Error initializing ESP-NOW");
     return;
   }
-  esp_now_register_recv_cb(esp_now_recv_cb_t(OnDataRecv));
+  esp_now_register_recv_cb(esp_now_recv_cb_t(OnDataRec));
   Serial.println("psramFound() = " + String(psramFound()));
+
 }
 
 void loop() {
-  if (bildvorhanden && !servergestartet){
-    Serial.println("Webserver wird gestartet");
-    //startingserver();
-    Serial.println("******************");
-    servergestartet = 1;
+
+  //F.R. ML Verarbeitung:
+
+  //Webserver anzeigen:
+  //Erst wenn er ein Bild erhalten hat
+  if (bildvorhanden){
+    Serial.println("Bild in Webserver");
+    loadbuffer();
     bildvorhanden = 0;
-    //Serial.println("Daten anzeigen:");
-    /*
-    for (int i = 0; i < photo_info.jpegsize; i++){
-      if ((i +1)% 40 == 0){
-        Serial.println("");
-      }
-      int zahl = fb_ptr[i];
-      Serial.print(zahl, HEX);
-      Serial.print(" ");
+    if (fb_ptr){
+      free(fb_ptr);
+      fb_ptr = nullptr;
     }
-    */
-    //Serial.println("");
-    //Serial.println("Daten angezeigt.");
-    startingserver();
-  }
-  
-  if (servergestartet){
-      server.handleClient();
+    position = 0;
+    photo_info.gesamtpakete = 0;
+    photo_info.phase = 0;
+    photo_info.jpegsize = 0;
   }
 }
 
 
-void OnDataRecv(const uint8_t * mac, const uint8_t *incomingdata, int len) {
+void OnDataRec(const uint8_t * mac, const uint8_t *incomingdata, int len) {
   //In die Memory reinkopieren
   if (len != sizeof(photo_info)) {
     Serial.printf("Empfangen: falsche Größe: %d\n", len);
@@ -85,7 +87,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingdata, int len) {
       memset(fb_ptr, 0, photo_info.jpegsize);
       photosize = photo_info.jpegsize;
       break;
-    
+
     case 0x02:
       //photo_info.data muss vielleicht allokiert werden
       //Serial.println("Stück Position: " + String(photo_info.position));
@@ -93,7 +95,8 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingdata, int len) {
 
       //Sollte potentiell als letztes gehen
       if (position == photo_info.gesamtpakete){
-        //Serial.println("\n************************");
+        Serial.println("\n************************");
+
         dataSize = photo_info.jpegsize - ((photo_info.position-1) * maxpackage);
         Serial.println("Packetgröße: " + String(dataSize));
         bildvorhanden = 1;
@@ -103,7 +106,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingdata, int len) {
       }
       position++;
       memset(photo_info.data, 0, sizeof(photo_info.data));
-
+      Serial.println("Paket da");
       break;
   }
 }
