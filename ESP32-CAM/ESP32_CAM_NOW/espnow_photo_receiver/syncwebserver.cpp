@@ -2,28 +2,27 @@
 #include <WiFi.h>
 #include <WebServer.h>
 
-//const char *ssid = "xxxx";
-//const char *password = "xxxx";
 
 //mittels extern, wird die gleiche Adresse auf pointer gezeigt
-extern void* fb_buffer;
+//extern void* fb_buffer;
 extern uint8_t* fb_ptr;
-extern size_t jpegSize;
+extern size_t photosize;
 
 extern WebServer server;
 
 
 /// XXX: die funktion wird nciht aufgerufen
 void handleImage() {
-  Serial.println("Sind im handleImage");
-  if (fb_ptr != nullptr && jpegSize > 0){
+  //Serial.println("Sind im handleImage");
+  if (fb_ptr != nullptr && photosize > 0){
     Serial.println("Bild wird abgerufen!");
 
     server.sendHeader("Content-Type", "image/jpeg");
-    server.send_P(200, "image/jpeg", (const char*)fb_ptr, jpegSize);
+    server.send_P(200, "image/jpeg", (const char*)fb_ptr, photosize);
   }else{
     server.send(404, "text/plain", "Kein Bild verfügbar");
   }
+  free(fb_ptr);
 }
  
 
@@ -38,14 +37,16 @@ void startingserver(){
   Serial.println("Verbunden mit WLAN");
   Serial.print("IP-Adresse: http://");
   Serial.println(WiFi.localIP());
-  Serial.println("JPEG Größe: " + String(jpegSize));
+  //Serial.println("JPEG Größe: " + String(photosize));
 
   //Dafür benötige http routen layout
   //server.on("/img", HTTP_GET, handleImage);
 
   //Bild wird direkt angezeigt
-  server.on("/image.jpg", handleImage);
+  server.on("/", handleImage);
 
   server.begin();
+
   Serial.println("Webserver gestartet");
 }
+

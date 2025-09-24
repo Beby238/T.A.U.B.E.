@@ -1,6 +1,9 @@
 #include "esp_camera.h"
 #include <esp_now.h>
 #include <WiFi.h>
+#include "esp_wifi.h"
+
+#include "img_converters.h" // für jpgtorgb565
 
 #define PWDN_GPIO_NUM  32
 #define RESET_GPIO_NUM -1
@@ -22,10 +25,21 @@
 
 //Die max. Größe vom Paket liegt zwischen 1000 und 1500 Bytes
 #define maxpackage 1000
+#define scale 2
 
+uint8_t *rgb_buf = NULL;
+uint8_t *rgb_cut = NULL;
+uint8_t * jpg_buf = NULL;
+size_t jpg_len = 0;
 
+size_t rgbwidth = 0;
+size_t rgbheight = 0;
+size_t rgblen = 0;
 uint8_t broadcastAddress[] = {0xFC, 0x01, 0x2C, 0xD1, 0xF6, 0xD4};
 esp_now_peer_info_t peerInfo;
+
+uint8_t channel = 1; //Für suche des Channels
+bool channelFound = false; // Für suche des Channels
 
 byte tookPhotoFlag = 0;
 byte sendnextPackageFlag = 0;
@@ -42,9 +56,9 @@ typedef struct photo_information {
 photo_information photo_info;
 
 camera_fb_t* fb = 0;
+camera_config_t config;
 
 void initCamera(){
-  camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
   config.ledc_timer = LEDC_TIMER_0;
   config.pin_d0 = Y2_GPIO_NUM;
@@ -78,8 +92,8 @@ void initCamera(){
 // Hinweis: Höhere Auflösungen benötigen PSRAM und senken die Framerate.
 
   if (psramFound()) {
-    config.frame_size = FRAMESIZE_SXGA;
-    config.jpeg_quality = 20;
+    config.frame_size = FRAMESIZE_SVGA;
+    config.jpeg_quality = 30;
     config.fb_count = 2;
   } else {
     config.frame_size = FRAMESIZE_VGA;
@@ -98,22 +112,86 @@ void initCamera(){
 
 void takePhoto(){
   tookPhotoFlag = 0;
-  Serial.println("Foto aufnehmen");
+  Serial.println("Foto aufnehmen rgb_cuten");
 
   //Je länger die LED an ist, desto heller ist es --> Kamera Einstellungen machen auch was aus
   digitalWrite(4, HIGH);
   delay(300);
   fb = esp_camera_fb_get();
-  if (!fb){
+  if (!fb){esp_camera_fb_return(fb);
     Serial.println("Camera capture failed");
   }
   digitalWrite(4, LOW);
-  Serial.println("");
+  delay(100);
+  /*
+  switch(config.frame_size){
+    case FRAMESIZE_QQVGA: rgbwidth = 80; rgbheight = 60; break;
+    case FRAMESIZE_240X240: rgbwidth = 120; rgbheight = 120; break;
+    case FRAMESIZE_QVGA: rgbwidth = 160 ; rgbheight = 120; break;
+    case FRAMESIZE_VGA: rgbwidth = 320 ; rgbheight = 240 ; break;
+    case FRAMESIZE_SVGA: rgbwidth = 400 ; rgbheight = 300 ; break;
+    case FRAMESIZE_XGA: rgbwidth = 512 ; rgbheight = 384 ; break;
+    case FRAMESIZE_SXGA: rgbwidth = 640 ; rgbheight = 512; break;
+    default: Serial.println("Unbekannte Auflösung"); break;
+  }
+  */
+  rgb_buf = (uint8_t*) ps_malloc(fb->width * fb->height *2);
+  jpg2rgb565(fb->buf, fb->len, (uint8_t*)rgb_buf, JPG_SCALE_NONE); //Das kann geändert werden: JPG_SCALE_(NONE/2X/4X/8X)
+
+  //Farben tauschen, weil Endian Reihenfolge anders ist
+  for (size_t i = 0; i < fb->width * fb->height *2; i += 2) { //sizeof(rgb_buf)
+    uint8_t tmp = rgb_buf[i];
+    rgb_buf[i] = rgb_buf[i + 1];
+    rgb_buf[i + 1] = tmp;
+  }
+  photocutting(150, 150, 120, 120);
+  jpg_buf = (uint8_t*) ps_malloc(fb->width * fb->height *2);
+  fmt2jpg((uint8_t*)rgb_cut, rgblen, rgbwidth, rgbheight, PIXFORMAT_RGB565, 40, &jpg_buf, &jpg_len);
+  free(rgb_cut);
+  esp_camera_fb_return(fb);
   transmitting();
 }
 
+/// XXX: Die Koordinaten können nicht stimmen für AI <-- noch zu machen
+void photocutting(unsigned int cropLeft, unsigned int cropRight,
+  unsigned int cropTop, unsigned int cropBottom){
+
+  rgbwidth = fb->width;
+  rgbheight = fb->height;
+  rgblen = rgbwidth * rgbheight * 2;
+  //fb->width und fb->height können sich ändern je nach SCale
+  unsigned int maxTopIndex = cropTop * rgbwidth * 2;
+  unsigned int minBottomIndex = ((rgbwidth*rgbheight) - (cropBottom * rgbwidth)) * 2;
+  unsigned short maxX = rgbwidth - cropRight; //In Pixels
+  unsigned short newWidth = rgbwidth - cropLeft - cropRight;
+  unsigned short newHeight = rgbheight - cropTop - cropBottom;
+  size_t newRgblen = newWidth * newHeight * 2;
+  
+
+  rgb_cut = (uint8_t*) ps_malloc(newWidth * newHeight * 2);
+  unsigned int writeIndex = 0;
+  //Loop over all bytes
+  for (int i = 0; i < rgblen; i+=2){
+    int x = (i/2) % rgbwidth;
+
+    if (i < maxTopIndex){continue;}
+    if (i > minBottomIndex){continue;}
+    if (x <=  cropLeft){continue;}
+    if (x > maxX){continue;}
+
+    rgb_cut[writeIndex++] = rgb_buf[i];
+    rgb_cut[writeIndex++] = rgb_buf[i+1];
+  }
+  free(rgb_buf);
+  rgbwidth = newWidth;
+  rgbheight = newHeight; 
+  rgblen = newRgblen;
+  Serial.println("cutted RGB größe: " + String(rgblen));
+}
+
+
 void transmitting(){
-  photo_info.jpegsize = fb->len;
+  photo_info.jpegsize = jpg_len ;
   Serial.println("Größe des Fotos: " + (String)photo_info.jpegsize);
   photo_info.position = 0;
   photo_info.gesamtpakete = ceil(photo_info.jpegsize / maxpackage);
@@ -130,8 +208,10 @@ void sendnextPaket(){
     Serial.println("Größe vom Struct: " + String(sizeof(photo_info)));
     photo_info.position = 0;
     photo_info.gesamtpakete = 0;
-    esp_camera_fb_return(fb);
+    free(jpg_buf);
     letztespaket = 0;
+    sendnextPackageFlag = 0;
+    tookPhotoFlag = 0;
     return;
   }
 
@@ -144,7 +224,9 @@ void sendnextPaket(){
   }
   photo_info.phase = 0x02;
   for (int i = 0; i < dataSize; i++){
-    photo_info.data[i] = fb->buf[photo_info.position * maxpackage + i];
+    //photo_info.data[i] = fb->buf[photo_info.position * maxpackage + i]; //Weil nicht mehr aktuell
+    photo_info.data[i] = jpg_buf[photo_info.position * maxpackage + i];
+    //photo_info.data[i] = rgb_cut[photo_info.position * maxpackage + i];
     /*
     if ((i+1) % 40 == 0){
       Serial.println("");
@@ -157,10 +239,28 @@ void sendnextPaket(){
   sendData();
 }
 
+//Für Suche des Channels
+void tryNextChannel() {
+  Serial.println("Changing channel from " + String(channel) + " to " + String(channel+1));
+  channel = channel % 13 + 1;
+  esp_wifi_set_promiscuous(true);
+  esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);
+  esp_wifi_set_promiscuous(false);
+}
+
 void OnDataSent(const uint8_t * mac_addr, esp_now_send_status_t status) {
   Serial.print("\r\nLast Packet Send Status:\t");
+
+  /*//Bleibt weil die Channel suche müselig ist und mit 
+  if (!channelFound && status != ESP_NOW_SEND_SUCCESS){
+    Serial.println("Delivery Fail because channel" + String(channel) + " does not match receiver channel.");
+    tryNextChannel(); // If message was not delivered, it tries on another wifi channel.
+  } else {
+    Serial.println("Delivery Successful ! Using channel : " + String(channel));
+    channelFound = true;
+  }
+  */
   Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
-  //Serial.println("Derzeitiges Paket: " + String(currentTransmitPosition));
   if (photo_info.gesamtpakete){ //Falls es eine Datei gibt zum versenden
     sendnextPackageFlag = 1;
     
@@ -202,16 +302,14 @@ void setup() {
     return;
  }
  //neuere Methode für callback hinzufügen
-  esp_now_register_send_cb(esp_now_send_cb_t(OnDataSent)); // esp_now_register_send_cb(OnDataSent);
-
-    // Register peer, kann durch automatische Suche ersetzt werden
+  esp_now_register_send_cb(esp_now_send_cb_t(OnDataSent)); 
   memcpy(peerInfo.peer_addr, broadcastAddress, 6);
 
-    /// XXX: Channel Problem bei WIFI --> nachsehen
-  peerInfo.channel = 0; 
-  peerInfo.encrypt = false;
+  //peerInfo.channel = 1;  //1
+  esp_wifi_set_channel(2, WIFI_SECOND_CHAN_NONE); 
 
-      // Add peer, kann durch automatische Suche ersetzt werden        
+  peerInfo.encrypt = false;
+     
   if (esp_now_add_peer(&peerInfo) != ESP_OK){
     Serial.println("Failed to add peer");
     return;
@@ -224,6 +322,8 @@ void setup() {
 
   initCamera();
   Serial.println("Größe vom Struct: " + String(sizeof(photo_info)));
+  //WiFi.printDiag(Serial);
+
 }
 
 void loop() {
