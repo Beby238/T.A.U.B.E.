@@ -210,7 +210,7 @@ void setup()
     connectAttempts++;
   }
 
- /* if (WiFi.status() != WL_CONNECTED) {
+  if (WiFi.status() != WL_CONNECTED) {
     Serial.println("WiFi Verbindung fehlgeschlagen!");
     return;
   }
@@ -219,7 +219,7 @@ void setup()
   Serial.println("");
   Serial.println("WiFi verbunden");
   Serial.print("IP-Adresse: ");
-  Serial.println(WiFi.localIP());*/
+  Serial.println(WiFi.localIP());
 
   // Webseite für den Stream
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -412,21 +412,12 @@ void loop()
 
     free(snapshot_buf);
 
-        // Video-Stream Endpoint
+        
     
 
 
 
- // server.begin();
-  Serial.println("HTTP Server gestartet");
-
-  if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("WiFi Verbindung fehlgeschlagen!");
-  } else {
-    Serial.print("WLAN OK, IP: ");
-    Serial.println(WiFi.localIP());
-  }
-  delay(1000);
+ 
   
 
 }
