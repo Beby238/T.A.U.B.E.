@@ -53,8 +53,8 @@ float faceConfidence = 0.0f;
 
 
 // WiFi-Zugangsdaten
-const char* ssid = "PYUR C89F0";
-const char* password = "ezA85rpfU4c2";
+const char* ssid = "";
+const char* password = "";
 
 AsyncWebServer server(80);
 
