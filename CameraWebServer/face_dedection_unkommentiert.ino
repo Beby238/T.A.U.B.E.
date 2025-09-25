@@ -356,8 +356,8 @@ void loop()
     // In globale Variablen schreiben
     faceX = bb.x * scaleX;
     faceY = bb.y * scaleY;
-    faceW = bb.width * scaleX;
-    faceH = bb.height * scaleY;
+    faceW = bb.width * scaleX + 60;
+    faceH = bb.height * scaleY + 60;
 
          
                
