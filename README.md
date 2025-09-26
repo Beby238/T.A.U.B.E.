@@ -4,7 +4,15 @@
 
 ## Einleitung:
 Das ursprüngliche Ziel war es einen Taubenroboter zu bauen die eine Kamera mit Gesichtserkennung hat, einen Motor um z.B. den Kopf zu bewegen sowie einen Lautsprecher womit Taubengeräusche ausgegeben werden.
-Durch anfängliche Problemen und einem kauf von zusätzlichen ESP's,
+Durch anfängliche Kamera Problemen an einem Esp32 S3 Wroom und einem kauf von zusätzlichen ESP's, wurde sich stattdessen entschieden ein intelligentes Überwachungssystem zu erstellen mit Gesichtsanalyse und darauffolgend die Taubenroboter zu erstellen.
+
+Ein intelligentes Überwachungssystem in Form von z.B. Taubenrobotern, kann zur besseren Überwachung führen sowohl positiv als auch negativ. Solche intelligente
+
+
+
+
+
+
 
 ## Sources:
 - https://github.com/Freenove/Freenove_ESP32_S3_WROOM_Board
@@ -24,10 +32,6 @@ Durch anfängliche Problemen und einem kauf von zusätzlichen ESP's,
 - https://stackoverflow.com/questions/63399901/how-to-fix-guru-meditation-error-core-1-paniced-loadprohibited-error
 - Memory Testing:
   - https://lonelybinary.com/en-uk/blogs/tinkerblock-esp32-s3-starter-kit/01_6_memory_testing_guide
- 
-## ESP-CAM (von QIQIAZI)
-- https://www.amazon.de/-/en/ESP32-CAM-Bluetooth-Development-ESP32-CAM-CM-Compatible/dp/B0DBHHQ7GX?crid=37KFDL1ZR7HRY&dib=eyJ2IjoiMSJ9.E3C6qinCAnEY84Gunl-Z4j4h5wX6d01K4mhHU689i73M_Ix3T4yaE1aTZyQGIIEd5dLphC1AsncBOKwDiC3ZhX9Bo0PHEGU_Q0QEcdeFLcp2YA5495W5rjvRjRCImXv0E8HTgY7dLAKH42bHJHFcX8J7HQzz-742l70GowQPKPbQGuskfxCANT0Zqiki7JA3xjNVFntaj_XMXmKru7KqgsDEzmp8zq-xuFoWHOhJMYg.Ow49Q-ClAkruMd2BpoHm4w0qlJtdtAmt5rEV_dXV6SE&dib_tag=se&keywords=esp32+cam&qid=1756395605&sprefix=esp32+cam%2Caps%2C128&sr=8-7
-- https://www.youtube.com/watch?v=z67mfL63e2M
 
 ### ESP32-Cam Hinweise:
 - für die Board LED: GPIO 4
@@ -40,9 +44,6 @@ Durch anfängliche Problemen und einem kauf von zusätzlichen ESP's,
 -  Laut der Anleitung ist das passende Arduino Kamera Modell: CAMERA_MODEL_ESP32S3_EYE
 -  Es gibt noch, einen VideoWebServer zu erstellen (unter Camera Web Server):
   -  https://super-starter-kit-for-esp32-s3-wroom.readthedocs.io/en/latest/1.C_Tutorial/25_camera_web_server.html
-
-
-
 
 ## ESP IDF:
 - https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/index.html
