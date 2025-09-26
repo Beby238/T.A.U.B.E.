@@ -1,7 +1,10 @@
 # T.A.U.B.E. / N.
 ### Taktische Aufklärungs- und Beobachtung-Einheit / Netzwerk
+- Repository erstellt am 08.08.2025
 
-
+## Einleitung:
+Das ursprüngliche Ziel war es einen Taubenroboter zu bauen die eine Kamera mit Gesichtserkennung hat, einen Motor um z.B. den Kopf zu bewegen sowie einen Lautsprecher womit Taubengeräusche ausgegeben werden.
+Durch anfängliche Problemen und einem kauf von zusätzlichen ESP's,
 
 ## Sources:
 - https://github.com/Freenove/Freenove_ESP32_S3_WROOM_Board
