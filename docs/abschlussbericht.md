@@ -5,7 +5,7 @@
 ## Einleitung:
 Das ursprüngliche Ziel war es einen Taubenroboter zu bauen die eine Kamera mit Gesichtserkennung hat, einen Motor um z.B. den Kopf zu bewegen sowie einen Lautsprecher womit Taubengeräusche ausgegeben werden.
 Durch anfängliche Kamera Problemen an einem Esp32 S3 Wroom und einem kauf von zusätzlichen ESP's mit eingebauten Kameras, wurde sich stattdessen entschieden ein intelligentes Überwachungssystem zu erstellen mit Gesichtsanalyse und darauffolgend die Taubenroboter zu erstellen.
-Leider ist das Projekt noch nicht vollständig. Dieses Projekt wird aber dennoch
+Leider ist das Projekt noch nicht vollständig. Dieses Projekt wird aber dennoch fortgesetzt.
 
 Ein intelligentes Überwachungssystem in Form von z.B. Taubenroboteren/drohnen, kann zur besseren Überwachung führen sowohl positiv als auch negativ. 
 Auf der positiven Seite, können diese z.B. an öffentliche Plätze platziert werden, um in Fälle eine Straftat eine gute Beweislage zu sichern oder an kritischen Stellen von z.B. Infrastruktur platziert und bedient werden, um für eine bessere Sicherheit zu bieten.
