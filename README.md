@@ -1,5 +1,5 @@
-# T.A.U.B.E.
-### Taktische Aufklärungs- und Beobachtung-Einheit = TAUBE
+# T.A.U.B.E. / N.
+### Taktische Aufklärungs- und Beobachtung-Einheit / Netzwerk
 
 
 
