@@ -22,7 +22,7 @@ Das intelligente Überwachungssystem soll in der Lage sein, automatisch Gesichte
 Die Gesichtsformerkennung soll unter einer Sekunde stattfinden. Die Sendung des Gesichts sollte unter 500 Millisekunden dauern, da sie sonst andere Drohnen vor Sendungen blockiert. Falls andere Drohnen blockiert werden, sollen diese das Gesicht temporär speichern und anschließend erneut senden.
 
 ## Architektur
-
+![Tauben Architektur](/images/Architektur.png)
 
 
 
