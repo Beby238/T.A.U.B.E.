@@ -13,6 +13,16 @@ Es ist auch sehr wichtig zu nennen, dass solche Drohnen auch zu sozialen Unruhen
 
 
 ## Technischer Hintergrund
-Auf der Hardware 
+Auf der Hardware Seite wurden drei Esp32-CAMs mit OV2640 Kameras verwenden und ein ESP32 S3 Wroom der etwas mehr Leistung hat.
+Auf der Software Seite wurden die Bibliotheken von Espressif für die Kamera aufnahme, der Bilderverarbeitung und ESPNow für die Bildübertragung verwendet. Für die Gesichtsformerkennung und der Gesichtsanalyse wurde die SDK Bibliothek Edge Impulse und für das Anzeigen der Bilder AsyncWebServer verwendet.
+
+## Anforderungen
+Das intelligente Überwachungssystem soll in der Lage sein, automatisch Gesichterformen zu erkennen und nur den Gesichtsbereich zu senden an einen mehr leistungsfähigen Mikrokontroller der dann die Gesichtsanalyse durchführt.
+
+Die Gesichtsformerkennung soll unter einer Sekunde stattfinden. Die Sendung des Gesichts sollte unter 500 Millisekunden dauern, da sie sonst andere Drohnen vor Sendungen blockiert. Falls andere Drohnen blockiert werden, sollen diese das Gesicht temporär speichern und anschließend erneut senden.
+
+## Architektur
+
+
 
 
