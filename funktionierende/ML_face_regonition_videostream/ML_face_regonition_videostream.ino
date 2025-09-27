@@ -53,8 +53,8 @@ float faceConfidence = 0.0f;
 
 
 // WiFi-Zugangsdaten
-const char *ssid = "GalaxyA56F23";
-const char *password = "d10doklol1092";
+const char *ssid = "";
+const char *password = "";
 
 AsyncWebServer server(80);
 
