@@ -24,9 +24,64 @@ Die Gesichtsformerkennung soll unter einer Sekunde stattfinden. Die Sendung des 
 
 ## Architektur
 ![Tauben Architektur](/images/Architektur.png)
+Im Architektur Modell sind drei Esp32-CAMs enthalten mit den OV2640 Kameras. Diese haben die Aufgabe Gesichtsformen zu erkennen, auszuschneiden und anschließend an den Esp32 S3-Wroom zu senden. Der Esp32 S3-Wroom analysiert die ausgeschnitten Gesichter, ob diese z.B. feindlich oder freundlich. Anschließend werden die Bilder vom Esp32 S3-Wroom vom eigenen lokal gehosteten, asynchronischen Web Server angezeigt mit dem jeweiligen Label oder weiterversendet. 
+
+Die Esp32-CAMs und der Esp32 S3-Wroom haben diese Aufgabenzuteilung, da diese Aufgaben zusammen einen ziemlich hohen Ressourcenverbrauch haben (Video + Bildverarbeitung + Gesichtsanalyse + asyncWebServer + weitersenden) und dadurch ein Esp32-CAM nicht die genügend Ressourcen hätte und der Esp32 S3-Wroom langsam wäre.
+
+### Gründe für die Zuteilung
+- Das Ausschneiden dient dazu, die ESPNow Übertragung zu verkürzen, und um die Gesichtanalyse im Esp32 S3-Wroom zu verkürzen.
+- Da es ein Netzwerk ist, muss die Lauffähigkeit von ESPNow gewährleistet sein und die Aufgaben recht sinvoll zugeteilt werden.
+- Da der Esp32 S3-Wroom deutlich mehr Ressourcen hat, kann dieser die Gesichter deutlich schneller verarbeiten sowie theoretisch für mehrere gleichzeitig. Dies hat keinen großen Effekt auf die Leistung wenn wenige Esp32-CAMs verbunden sind. Bei mehreren Esp32-CAMS kann aber dadurch die Leistung aufrechterhalten werden.
+ - Der Esp32 S3-Wroom dient zusätzlich auch als Schnittstelle, da nur er über eine WebServer zugreifbar ist.
+ 
+
+## Implementierung
+Es wurde in C++ geschrieben.
+Es wurden folgenden Bibliotheken verwendet:
+- "esp_camera.h"
+ - Kamera Einstellung sowie Video/Foto Aufnamen Funktionen
+- <esp_now.h>
+ - Übertragungsprotokoll, dass die WiFi Bibliothek verwendet für den Verbindungsaufbau.
+- <WiFi.h>
+ - Einrichtung des Esp32 S3 Wroom als Station und für ESPNow
+- "esp_wifi.h"
+ - Für die ESPNow Channeleinstellung und Suche, da der Empfänger durch AsyncWebServer einen eigenartigen Channel Einstellungen hat
+- "img_converters.h" 
+ - Für die Bildverarbeitungsfunktionen: jpg2rgb565, fmt2jpg
+- Von Edge Impuls dessen SDK Bibliotheken, um die Gesichtserkennungs MLs einzubinden
+ 
+### Code:
+
+Beim ESPNow für den Sender gibt es die sogenannte Callback-Funktion, die Nachrichten vom Empfänger wieder zurücksendet (Success/Fail).
+
+Bildverarbeitung:
+```cpp
+...
+```
+
+Bildsendung (ESPNow):
+
+AsyncWebServer:
+
+Gesichtsanalyse ML (Video Stream):
+
+
 
 
 ## Tests und Ergebnisse
+Die Tests wurden in Form von funktionierenden Beispielen durchgeführt, die dann zum Source-Code hinzugefügt wurden. Die Output-Beispiele waren von unseren Gesichter.
+
+Es gibt zusätzlich noch den Ordner "not_functional". 
+Dort liegt noch ein nicht funktionierender Source-Code, wo die SDK-Bibliothek von Edge Impulse implementiert ist und der Bildverarbeitungs-, Zuschneidungs- und ESPNow Code enthalten sind und versucht wurde es zu kombinieren.
+
+
+## Fazit und Ausblick
+Einer der größten Herausforderungen ist die Implementation von Edge Impuls Face Detection und Face Recognition. Wegen Zeitmangel und ein Source Code der etwas unübersichtlich sowie angepasst werden musste, ist die Implementation noch nicht gelungen. Aber es wurde ein Source erstellt der mit einem Videowebserver, die Klassifizierung von feindlichen und freundlichen (bitte lächeln) funktioniert.
+
+Bildverarbeitung und Sendung waren...
+
+
+
 Folgende Ziele wurden erreicht:
 - Bildverarbeitung sowie Zuschneidung der Bilder
 - Übertragung der Bilder zu einem anderen Esp32

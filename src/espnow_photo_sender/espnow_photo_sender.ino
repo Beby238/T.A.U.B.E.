@@ -25,7 +25,6 @@
 
 //Die max. Größe vom Paket liegt zwischen 1000 und 1500 Bytes
 #define maxpackage 1000
-#define scale 2
 
 uint8_t *rgb_buf = NULL;
 uint8_t *rgb_cut = NULL;
@@ -68,7 +67,7 @@ void initCamera(){
   config.pin_d4 = Y6_GPIO_NUM;
   config.pin_d5 = Y7_GPIO_NUM;
   config.pin_d6 = Y8_GPIO_NUM;
-  config.pin_d7 = Y9_GPIO_NUM;
+  config.pin_d7 = Y9_GPIO_NUM;http://192.168.103.196
   config.pin_xclk = XCLK_GPIO_NUM;
   config.pin_pclk = PCLK_GPIO_NUM;
   config.pin_vsync = VSYNC_GPIO_NUM;
@@ -92,7 +91,7 @@ void initCamera(){
 // Hinweis: Höhere Auflösungen benötigen PSRAM und senken die Framerate.
 
   if (psramFound()) {
-    config.frame_size = FRAMESIZE_SVGA;
+    config.frame_size = FRAMESIZE_VGA;
     config.jpeg_quality = 30;
     config.fb_count = 2;
   } else {
@@ -101,7 +100,7 @@ void initCamera(){
     config.fb_count = 1;
   }
 
-    // Init Camera
+  // Init Camera
   esp_err_t err = esp_camera_init(&config);
   if (err != ESP_OK) {
     Serial.printf("Camera init failed with error 0x%x", err);
@@ -123,18 +122,6 @@ void takePhoto(){
   }
   digitalWrite(4, LOW);
   delay(100);
-  /*
-  switch(config.frame_size){
-    case FRAMESIZE_QQVGA: rgbwidth = 80; rgbheight = 60; break;
-    case FRAMESIZE_240X240: rgbwidth = 120; rgbheight = 120; break;
-    case FRAMESIZE_QVGA: rgbwidth = 160 ; rgbheight = 120; break;
-    case FRAMESIZE_VGA: rgbwidth = 320 ; rgbheight = 240 ; break;
-    case FRAMESIZE_SVGA: rgbwidth = 400 ; rgbheight = 300 ; break;
-    case FRAMESIZE_XGA: rgbwidth = 512 ; rgbheight = 384 ; break;
-    case FRAMESIZE_SXGA: rgbwidth = 640 ; rgbheight = 512; break;
-    default: Serial.println("Unbekannte Auflösung"); break;
-  }
-  */
   rgb_buf = (uint8_t*) ps_malloc(fb->width * fb->height *2);
   jpg2rgb565(fb->buf, fb->len, (uint8_t*)rgb_buf, JPG_SCALE_NONE); //Das kann geändert werden: JPG_SCALE_(NONE/2X/4X/8X)
 
@@ -144,7 +131,7 @@ void takePhoto(){
     rgb_buf[i] = rgb_buf[i + 1];
     rgb_buf[i + 1] = tmp;
   }
-  photocutting(150, 150, 120, 120);
+  photocutting(10, 10, 10, 10);
   jpg_buf = (uint8_t*) ps_malloc(fb->width * fb->height *2);
   fmt2jpg((uint8_t*)rgb_cut, rgblen, rgbwidth, rgbheight, PIXFORMAT_RGB565, 40, &jpg_buf, &jpg_len);
   free(rgb_cut);
@@ -224,16 +211,7 @@ void sendnextPaket(){
   }
   photo_info.phase = 0x02;
   for (int i = 0; i < dataSize; i++){
-    //photo_info.data[i] = fb->buf[photo_info.position * maxpackage + i]; //Weil nicht mehr aktuell
     photo_info.data[i] = jpg_buf[photo_info.position * maxpackage + i];
-    //photo_info.data[i] = rgb_cut[photo_info.position * maxpackage + i];
-    /*
-    if ((i+1) % 40 == 0){
-      Serial.println("");
-    }
-    Serial.print(photo_info.data[i], HEX);
-    Serial.print(" ");
-    */
   }
   photo_info.position++;
   sendData();
@@ -251,7 +229,8 @@ void tryNextChannel() {
 void OnDataSent(const uint8_t * mac_addr, esp_now_send_status_t status) {
   Serial.print("\r\nLast Packet Send Status:\t");
 
-  /*//Bleibt weil die Channel suche müselig ist und mit 
+  //Bleibt weil die Channel suche müselig ist und mit
+  /*
   if (!channelFound && status != ESP_NOW_SEND_SUCCESS){
     Serial.println("Delivery Fail because channel" + String(channel) + " does not match receiver channel.");
     tryNextChannel(); // If message was not delivered, it tries on another wifi channel.
@@ -296,7 +275,7 @@ void setup() {
   Serial.begin(115200);
   WiFi.mode(WIFI_STA);
 
-    // Init ESP-NOW
+  // Init ESP-NOW
   if (esp_now_init() != ESP_OK) {
     Serial.println("Error initializing ESP-NOW");
     return;
@@ -305,8 +284,8 @@ void setup() {
   esp_now_register_send_cb(esp_now_send_cb_t(OnDataSent)); 
   memcpy(peerInfo.peer_addr, broadcastAddress, 6);
 
-  //peerInfo.channel = 1;  //1
-  esp_wifi_set_channel(2, WIFI_SECOND_CHAN_NONE); 
+  //peerInfo.channel = 1;
+  esp_wifi_set_channel(5, WIFI_SECOND_CHAN_NONE); 
 
   peerInfo.encrypt = false;
      
@@ -316,7 +295,7 @@ void setup() {
   }
 
   pinMode(4, OUTPUT);
-  digitalWrite(4, LOW); // LED aus
+  digitalWrite(4, LOW);
 
   Serial.println("psramFound() = " + String(psramFound()));
 
@@ -327,7 +306,6 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
   if (!sendnextPackageFlag && !tookPhotoFlag && Serial.available() > 0 && Serial.read() == 'f'){
     tookPhotoFlag = 1;
     takePhoto();

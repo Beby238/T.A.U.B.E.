@@ -18,6 +18,8 @@ byte bildvorhanden = 0;
 
 typedef struct photo_information {
   uint8_t phase;
+  int width = fb->width;
+  int height = fb->height;
   int jpegsize;
   int position;
   int gesamtpakete;

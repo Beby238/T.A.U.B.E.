@@ -3,6 +3,9 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 
+const char *ssid = "GalaxyA56F23";
+const char *password = "d10doklol1092";
+
 //Für das Anzeigen wird nur der Buffer und die Länge gebraucht
 struct Image {
   uint8_t* buf = nullptr;
