@@ -4,6 +4,7 @@
 WebServerModule::WebServerModule(int &x, int &y, int &w, int &h, String &label, float &confidence)
     : server(80), faceX(x), faceY(y), faceW(w), faceH(h), faceLabel(label), faceConfidence(confidence) {}
 
+// Mit WiFi verbinden
 void WebServerModule::begin(const char* ssid, const char* password) {
     WiFi.begin(ssid, password);
     WiFi.setSleep(false);
@@ -25,7 +26,7 @@ void WebServerModule::begin(const char* ssid, const char* password) {
     Serial.print("IP address: ");
     Serial.println(WiFi.localIP());
 
-
+    // Webseite für den Stream
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     String html = R"rawliteral(
         <!DOCTYPE html>
@@ -73,7 +74,7 @@ void WebServerModule::begin(const char* ssid, const char* password) {
     });
 
 
-    // JSON-Daten vom Face Detection
+    // JSON-Daten vom Face Regonition
     server.on("/face", HTTP_GET, [&](AsyncWebServerRequest *request) {
         String json;
         if (faceX >= 0) {
