@@ -14,7 +14,7 @@ Siehe [LICENSE](LICENSE) für Details.
 
 Dieses Projekt verwendet die **Edge Impulse SDK-Bibliothek für Object Detection**, lizenziert unter der [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0).
 
-Weitere Informationen findest du im [Edge Impulse GitHub Repository](https://github.com/edgeimpulse/firmware-arduino).
+Weitere Informationen findest du im [Edge Impulse docs](https://docs.edgeimpulse.com/hardware/deployments/run-arduino-2-0).
 
 ### Bibliotheken/Oss-Komponenten
 Dieses Projekt nutzt folgende Open-Source-Bibliotheken:

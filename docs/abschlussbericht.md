@@ -257,7 +257,7 @@ Weitere Hinweise:
 - Die Funktion `tryNextChannel`, sollte im markierten Bereich bei `OnDataSent`, bei Kanalsuche auskommentiert werden, um den richtigen WiFi Kanal zu finden. Durch den AsyncWebServer auf dem Empfänger, unterscheidet sich dieser Kanal sehr sprunghaft. 
 - In der Funktion `takePhoto()`, können die Werte bei `photocutting()` Werte verändert werden, um das Bild unterschiedlich zu Cutten. Diese sollten aber nicht Null sein oder negativ, da sonst Buffer Overflows entstehen können, durch die Berechnungen in der Funktion. \
 
-- Beim `espnow_photo_receiver` bei der `syncwebserver.cpp` Datei die SSID und das Passwort angegeben werden. Die IP-Adresse vom Webserver sollte angezeigt werden.
+Beim `espnow_photo_receiver` bei der `syncwebserver.cpp` Datei die SSID und das Passwort angegeben werden. Die `ei-esp32_face_semirecognition-arduino-1.0.2` von Edge Impulse muss über die Arduino IDE eingefügt werden. Das kann man unter dem Tab `Sketch --> Bibliotheken einbinden --> .Zip-Bibliothek einfügen` einfügen.
 Die IP-Adresse vom Webserver wird angezeigt und darauf kann man auf die fotografierten Bilder zugreifen.
 
 
