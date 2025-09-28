@@ -32,7 +32,7 @@
 #include "WebServerModule.h"
 
 
-
+// Globale Variablen fuer Rechteck
 int faceX = -1, faceY = -1, faceW = -1, faceH = -1;
 String faceLabel = "";
 float faceConfidence = 0.0f;
@@ -46,8 +46,8 @@ const int MODEL_HEIGHT = EI_CLASSIFIER_INPUT_HEIGHT;
 float scaleX = 320.0f / EI_CLASSIFIER_INPUT_WIDTH;
 float scaleY = 240.0f / EI_CLASSIFIER_INPUT_HEIGHT;
 
-const char* ssid = "MagentaWLAN-8JDX";
-const char* password = "79682524043529231606";
+const char* ssid = "";
+const char* password = "";
 
 
 
