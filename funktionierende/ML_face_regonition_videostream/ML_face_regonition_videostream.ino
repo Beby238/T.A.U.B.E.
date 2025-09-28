@@ -32,7 +32,7 @@
 #include "WebServerModule.h"
 
 
-
+//globale Variablen fuer Rechteck
 int faceX = -1, faceY = -1, faceW = -1, faceH = -1;
 String faceLabel = "";
 float faceConfidence = 0.0f;
