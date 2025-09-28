@@ -76,7 +76,7 @@ Dort liegt noch ein nicht funktionierender Source-Code, wo die SDK-Bibliothek vo
 
 
 ## Fazit und Ausblick
-Einer der größten Herausforderungen ist die Implementation von Edge Impuls Face Detection und Face Recognition. Wegen Zeitmangel und ein Source Code der etwas unübersichtlich sowie angepasst werden musste, ist die Implementation noch nicht gelungen. Aber es wurde ein Source erstellt der mit einem Videowebserver, die Klassifizierung von feindlichen und freundlichen (bitte lächeln) funktioniert.
+Einer der größten Herausforderungen ist die Implementation von Edge Impuls Face Detection und Face Recognition. Wegen Zeitmangel und ein Source Code der etwas unübersichtlich sowie angepasst werden musste, ist die Implementation noch nicht gelungen. Aber es wurde ein Source erstellt der mit einem Videowebserver, die Klassifizierung von feindlichen und freundlichen (bitte lächeln) funktioniert. Da diese Implementation eines laufenden Videostreams zusammen mit dem Senden von Daten potentiell recht Ressourcen aufwendig sein kann, wurde sich vorab entgegen eines laufenden Viedostreams in der Hauptarchitektur entschieden. Jedoch kann diese Implementierung zusatzlich gesteset und eventuell mit in dei HYauptarchitektur verbunden werden. 
 
 Bildverarbeitung und Sendung waren...
 
