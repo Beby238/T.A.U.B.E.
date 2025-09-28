@@ -14,7 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-//Weitere Datei für F.R. ML
+ 
+/**
+* Diese Datei wird auf einem ESP32 geladen und nimmt ein Bild auf, verarbeitet es und sendet es über ESP-NOW an einen anderen ESP32.
+* @author Daniel Babkin
+*/
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -29,7 +33,7 @@ struct Image {
   String caption = "";
 };
 
-Image images[5]; // Bild anzeige anpassen
+Image images[5];
 int currentIndex = 0;
 
 extern uint8_t* fb_ptr;
@@ -38,7 +42,9 @@ extern size_t photosize;
 extern AsyncWebServer server;
 
 
-/// XXX: die funktion wird nciht aufgerufen
+/**
+* Einstellung vom AsyncWebserver auf bestimmte Aufrufe. Der Webserver kontrolliert den Buffer nach einer eingestellten Zeit.
+*/
 void handleWorkload() {
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     String html = "<html><body>";
@@ -53,7 +59,7 @@ void handleWorkload() {
             "document.getElementById('img'+i).src='/bild?id='+i+'&t='+new Date().getTime();"
             "document.getElementById('caption'+i).innerText = 'Bild ' + (i + 1);"
             "}"
-            "}, 5000);"  // alle 2 Sekunden
+            "}, 5000);" 
             "</script>";
     html += "</body></html>";
     request->send(200, "text/html", html);
@@ -74,6 +80,9 @@ void handleWorkload() {
   });
 }
 
+/**
+* In dieser Funktion wird der externe Bildbuffer fb_ptr in einem größeren Buffer kopiert. Dabei werden ältere Bilder überschrieben.
+*/
 void loadbuffer(){
   //das alte Bild wird gelöscht
   if(images[currentIndex].buf){
@@ -91,7 +100,9 @@ void loadbuffer(){
 }
  
 
-//Oder ins void setup() einfügen
+/**
+* Die Einstellungen sowie der Start vom AsyncWebServer.
+*/
 void startingserver(){
   WiFi.begin(ssid, password);  
   while (WiFi.status() != WL_CONNECTED) {

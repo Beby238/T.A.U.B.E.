@@ -29,9 +29,7 @@
 
 
 
-/**
-* Die Kamerapins Einstellungen. Müssen eingestellt werden.
-*/
+// Die Kamerapins Einstellungen. Müssen eingestellt werden.
 #define PWDN_GPIO_NUM  32
 #define RESET_GPIO_NUM -1
 #define XCLK_GPIO_NUM  0
@@ -75,9 +73,8 @@ byte sendnextPackageFlag = 0;
 byte letztespaket = 0;
 
 
-/**
-* Ein struct zur Speicherung von wichtigen Daten für die Übetragung 
-*/
+
+//Ein struct zur Speicherung von wichtigen Daten für die Übetragung 
 typedef struct photo_information {
   uint8_t phase;
   int jpegsize;

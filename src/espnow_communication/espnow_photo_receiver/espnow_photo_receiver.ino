@@ -14,11 +14,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
+ 
+/**
+* Diese Datei wird auf einem ESP32 geladen und nimmt ein Bild auf, verarbeitet es und sendet es über ESP-NOW an einen anderen ESP32.
+* @author Daniel Babkin
+*/
 #include <esp_now.h>
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 
+// Größe der Datenpakete. Muss gleich vom Sender sein.
 #define maxpackage 1000
 
 AsyncWebServer server(80);
@@ -32,6 +38,7 @@ char caption = 0;
 
 byte bildvorhanden = 0;
 
+// Struct für Bilderdaten
 typedef struct photo_information {
   uint8_t phase;
   int width = fb->width;
@@ -44,15 +51,20 @@ typedef struct photo_information {
 
 photo_information photo_info;
 
+// Funktionen von syncwebserver.cpp, um auf diese zuzugreifen
 void startingserver();
 void loadbuffer();
-void handleWorkload();
 
+/**
+* Einstellung für ESP32
+*/
 void setup() {
   Serial.begin(115200);
 
   // WIFI_AP_STA, falls man NOW und WIFI verwenden will --> nur bei AsncWebserver möglich
-  WiFi.mode(WIFI_AP_STA); //WIFI_AP_STA
+  WiFi.mode(WIFI_AP_STA);
+  
+  //Webserver starten und deren Einstellungen
   startingserver();
 
   server.begin();
@@ -68,12 +80,12 @@ void setup() {
 
 }
 
+/**
+* Schleife für Esp32
+*/
 void loop() {
 
-  //F.R. ML Verarbeitung:
-
-  //Webserver anzeigen:
-  //Erst wenn er ein Bild erhalten hat
+  // Wenn ein Bild vorhanden ist, wird es im Webserver angezeigt und temporär gespeichert
   if (bildvorhanden){
     Serial.println("Bild in Webserver");
     loadbuffer();
@@ -89,15 +101,18 @@ void loop() {
   }
 }
 
-
+/**
+* Eine Callback Methode für ESP-NOW, um die Datenpakete zu empfangen und zu speichern.
+*/
 void OnDataRec(const uint8_t * mac, const uint8_t *incomingdata, int len) {
-  //In die Memory reinkopieren
   if (len != sizeof(photo_info)) {
     Serial.printf("Empfangen: falsche Größe: %d\n", len);
     return;
   }
   memcpy(&photo_info, incomingdata, sizeof(photo_info));
   switch (photo_info.phase){
+  
+  //Um Bildgröße und Gesamtpakete zu bekommen. 
     case 0x01:
       Serial.println("Bildgröße: " + String(photo_info.jpegsize));
       Serial.println("gesamt Pakete: " + String(photo_info.gesamtpakete));
@@ -106,12 +121,9 @@ void OnDataRec(const uint8_t * mac, const uint8_t *incomingdata, int len) {
       photosize = photo_info.jpegsize;
       break;
 
+  //Empfangen von Datenpakete und in einem Bildbuffer reinschreiben.
     case 0x02:
-      //photo_info.data muss vielleicht allokiert werden
-      //Serial.println("Stück Position: " + String(photo_info.position));
       int dataSize = maxpackage;
-
-      //Sollte potentiell als letztes gehen
       if (position == photo_info.gesamtpakete){
         Serial.println("\n************************");
 
