@@ -1,15 +1,16 @@
 # T.A.U.B.E. / N.
 ### Taktische Aufklärungs- und Beobachtung-Einheit / Netzwerk
 - Repository erstellt am 08.08.2025
+- Ersellt von Daniel Babkin und Mikail Gül
 
 ## Einleitung:
 Das ursprüngliche Ziel war es einen Taubenroboter zu bauen die eine Kamera mit Gesichtserkennung hat, einen Motor um z.B. den Kopf zu bewegen sowie einen Lautsprecher womit Taubengeräusche ausgegeben werden.
-Durch anfängliche Kamera Problemen an einem Esp32 S3 Wroom und einem kauf von zusätzlichen ESP's mit eingebauten Kameras, wurde sich stattdessen entschieden ein intelligentes Überwachungssystem zu erstellen mit Gesichtsanalyse und darauffolgend die Taubenroboter zu erstellen.
+Durch anfängliche Kamera Problemen an einem Esp32 S3-Wroom und einem kauf von zusätzlichen ESP's mit eingebauten Kameras, wurde sich stattdessen entschieden ein intelligentes Überwachungssystem zu erstellen mit Gesichtsanalyse und darauffolgend die Taubenroboter zu erstellen.
 Leider ist das Projekt noch nicht vollständig. Dieses Projekt wird aber dennoch fortgesetzt.
 
 Ein intelligentes Überwachungssystem in Form von z.B. Taubenroboteren/drohnen, kann zur besseren Überwachung führen sowohl positiv als auch negativ. 
 Auf der positiven Seite, können diese z.B. an öffentliche Plätze platziert werden, um in Fälle eine Straftat eine gute Beweislage zu sichern oder an kritischen Stellen von z.B. Infrastruktur platziert und bedient werden, um für eine bessere Sicherheit zu bieten.
-Wichtig ist aber auch, dass diese Drohnen sehr schnell und leicht missbraucht werden können, von einem Staat, Organisation, Unternehmen oder einzelne Personen an Orten wo diese nicht gebraucht werden oder für illegale Aktivitäten. Das Herstellen von solchen intelligenten Überwachungsdrohnen ist schon mit wenig Kenntnissen relativ gut machbar umzusetzbar und erfordert nur die benötigten Ressourcen die heutzutage sehr leicht zugänglich und günstig sind.
+Wichtig ist aber auch, dass diese Drohnen sehr schnell und leicht missbraucht werden können, von einem Staat, Organisation, Unternehmen oder einzelne Personen an Orten wo diese nicht gebraucht werden oder für illegale Aktivitäten. Das Herstellen von solchen intelligenten Überwachungsdrohnen ist schon mit wenig Kenntnissen relativ gut machbar umsetzbar und erfordert nur die benötigten Ressourcen die heutzutage sehr leicht zugänglich und günstig sind.
 Es ist auch sehr wichtig zu nennen, dass solche Drohnen auch zu sozialen Unruhen führen kann, wie man es schon an Verschwörungstheorien über echte Tauben sehen kann.
 
 
@@ -38,32 +39,159 @@ Die Esp32-CAMs und der Esp32 S3-Wroom haben diese Aufgabenzuteilung, da diese Au
 ## Implementierung
 Es wurde in C++ geschrieben.
 Es wurden folgenden Bibliotheken verwendet:
-- "esp_camera.h"
+- `"esp_camera.h"`
  - Kamera Einstellung sowie Video/Foto Aufnamen Funktionen
-- <esp_now.h>
+- `<esp_now.h>`
  - Übertragungsprotokoll, dass die WiFi Bibliothek verwendet für den Verbindungsaufbau.
-- <WiFi.h>
+- `<WiFi.h>`
  - Einrichtung des Esp32 S3 Wroom als Station und für ESPNow
-- "esp_wifi.h"
- - Für die ESPNow Channeleinstellung und Suche, da der Empfänger durch AsyncWebServer einen eigenartigen Channel Einstellungen hat
-- "img_converters.h" 
+- `"esp_wifi.h"`
+ - Für die ESPNow Kanaleinstellung und Suche, da der Empfänger durch AsyncWebServer einen eigenartigen Kanal Einstellungen hat
+- `"img_converters.h"` 
  - Für die Bildverarbeitungsfunktionen: jpg2rgb565, fmt2jpg
 - Von Edge Impuls dessen SDK Bibliotheken, um die Gesichtserkennungs MLs einzubinden
  
-### Code:
+### Code
 
 Beim ESPNow für den Sender gibt es die sogenannte Callback-Funktion, die Nachrichten vom Empfänger wieder zurücksendet (Success/Fail).
 
-Bildverarbeitung:
+#### Bildverarbeitung:
+- Beim Aufruf der Funktion `takePhoto()`, wird ein Bild aufgenommen. Das Bild wird anschließend mit `jpg2rgb565()`, in ein Buffer im rgb565 Format gespeichert und dabei werden die Farben blau und rot getauscht (For Loop), da die Funktion es sonst falsch verarbeitet. 
+Anschließen wird das Bild geschnitten und in das Jpeg Format umgewandelt.
 ```cpp
-...
+    void takePhoto(){
+    ...
+  rgb_buf = (uint8_t*) ps_malloc(fb->width * fb->height *2);
+  jpg2rgb565(fb->buf, fb->len, (uint8_t*)rgb_buf, JPG_SCALE_NONE); //Das kann geändert werden: JPG_SCALE_(NONE/2X/4X/8X)
+
+  //Farben tauschen, weil Endian Reihenfolge anders ist
+  for (size_t i = 0; i < fb->width * fb->height *2; i += 2) { //sizeof(rgb_buf)
+    uint8_t tmp = rgb_buf[i];
+    rgb_buf[i] = rgb_buf[i + 1];
+    rgb_buf[i + 1] = tmp;
+  }
+  
+  photocutting(10, 10, 10, 10);
+  
+  jpg_buf = (uint8_t*) ps_malloc(fb->width * fb->height *2);
+  fmt2jpg((uint8_t*)rgb_cut, rgblen, rgbwidth, rgbheight, PIXFORMAT_RGB565, 40, &jpg_buf, &jpg_len);
+  free(rgb_cut);
+  esp_camera_fb_return(fb);
+  transmitting();
+}
 ```
 
-Bildsendung (ESPNow):
+#### Bildsendung (ESPNow):
+- Nachdem ein Bild aufgenommen wurde, wird die Funktion `transmitting()` aufgerufen, die ermittelt wie groß die Paket Anzahl für ESPNow ist und setzt den Statuscode, dass ein Bild gesendet wird. In sendData, werden die Einstelldaten gesendet.
+```cpp
+void transmitting(){
+  photo_info.jpegsize = jpg_len ;
+  Serial.println("Größe des Fotos: " + (String)photo_info.jpegsize);
+  photo_info.position = 0;
+  photo_info.gesamtpakete = ceil(photo_info.jpegsize / maxpackage);
+  Serial.println("Packetanzahl: " +  (String)photo_info.gesamtpakete);
 
-AsyncWebServer:
+  photo_info.phase = 0x01;
+  sendData();
+}
+```
 
-Gesichtsanalyse ML (Video Stream):
+- Die Übermittlung erfolgreich war, werden die Datenpakete nacheinander versendet. Der Bildbuffer wird Wert für Wert abgegangen und nacheinander versendet und merkt sich die Position, bei welchem Paket man sich derzeit befindet und übermittelt diese auch. Dabei muss aber auch die Datenpaketgröße sich gemerkt werden, da die Größe vom letzten Paket sich änder kann. Nach Abschluss der Sendung, werden alle Variablen auf Null gesetzt.
+```cpp
+void sendnextPaket(){
+  sendnextPackageFlag = 0;
+  if (letztespaket && photo_info.position > photo_info.gesamtpakete){
+    photo_info.position = 0;
+    photo_info.gesamtpakete = 0;
+    free(jpg_buf);
+    letztespaket = 0;
+    sendnextPackageFlag = 0;
+    tookPhotoFlag = 0;
+    return;
+  }
+
+  int dataSize = maxpackage;
+  if (photo_info.position == photo_info.gesamtpakete){
+      Serial.println("\n************************");
+      dataSize = photo_info.jpegsize - ((photo_info.position) * maxpackage);
+      Serial.println("Packetgröße: " + String(dataSize));
+      letztespaket = 1;
+  }
+  photo_info.phase = 0x02;
+  for (int i = 0; i < dataSize; i++){
+    photo_info.data[i] = jpg_buf[photo_info.position * maxpackage + i];
+  }
+  photo_info.position++;
+  sendData();
+}
+```
+
+#### Bildempfangen (ESPNow):
+- Der Bildempfang wird mittels der Statuscodes (nur 2) abgewickelt und den Paketpositionen. Die Daten werden in einem Bildbuffer gespeichert (fb_ptr).
+```cpp
+void OnDataRec(const uint8_t * mac, const uint8_t *incomingdata, int len) {
+  //In die Memory reinkopieren
+  if (len != sizeof(photo_info)) {
+    Serial.printf("Empfangen: falsche Größe: %d\n", len);
+    return;
+  }
+  memcpy(&photo_info, incomingdata, sizeof(photo_info));
+  switch (photo_info.phase){
+    case 0x01:
+      Serial.println("Bildgröße: " + String(photo_info.jpegsize));
+      Serial.println("gesamt Pakete: " + String(photo_info.gesamtpakete));
+      fb_ptr = (uint8_t*) ps_malloc(photo_info.jpegsize+50);
+      memset(fb_ptr, 0, photo_info.jpegsize);
+      photosize = photo_info.jpegsize;
+      break;
+
+    case 0x02:
+      //photo_info.data muss vielleicht allokiert werden
+      //Serial.println("Stück Position: " + String(photo_info.position));
+      int dataSize = maxpackage;
+
+      //Sollte potentiell als letztes gehen
+      if (position == photo_info.gesamtpakete){
+        Serial.println("\n************************");
+
+        dataSize = photo_info.jpegsize - ((photo_info.position-1) * maxpackage);
+        Serial.println("Packetgröße: " + String(dataSize));
+        bildvorhanden = 1;
+      }
+      for (int i = 0; i < dataSize; i++){
+        fb_ptr[position * maxpackage + i] = photo_info.data[i];
+      }
+      position++;
+      memset(photo_info.data, 0, sizeof(photo_info.data));
+      Serial.println("Paket da");
+      break;
+  }
+}
+```
+
+#### AsyncWebServer, Bild speichern:
+Wenn ein Bild empfangen wurde, wird der fb_ptr in einem Ringbuffer gespeichert. Dieser dient als temporärer Speicher, der alte Bild überschreibt.
+```cpp
+void loadbuffer(){
+  //das alte Bild wird gelöscht
+  if(images[currentIndex].buf){
+    free(images[currentIndex].buf);
+    images[currentIndex].buf = nullptr;
+  }
+
+  images[currentIndex].buf = (uint8_t*)ps_malloc(photosize);
+  if(images[currentIndex].buf){
+    memcpy(images[currentIndex].buf, fb_ptr, photosize);
+    images[currentIndex].len = photosize;
+    images[currentIndex].caption = "Bild " + String(currentIndex + 1);
+    currentIndex = (currentIndex + 1) % 5;
+  }
+}
+```
+
+#### Gesichtsanalyse ML (Videostream):
+```cpp
+```
 
 
 
@@ -76,17 +204,53 @@ Dort liegt noch ein nicht funktionierender Source-Code, wo die SDK-Bibliothek vo
 
 
 ## Fazit und Ausblick
-Einer der größten Herausforderungen ist die Implementation von Edge Impuls Face Detection und Face Recognition. Wegen Zeitmangel und ein Source Code der etwas unübersichtlich sowie angepasst werden musste, ist die Implementation noch nicht gelungen. Aber es wurde ein Source erstellt der mit einem Videowebserver, die Klassifizierung von feindlichen und freundlichen (bitte lächeln) funktioniert. Da diese Implementation eines laufenden Videostreams zusammen mit dem Senden von Daten potentiell recht Ressourcen aufwendig sein kann, wurde sich vorab entgegen eines laufenden Viedostreams in der Hauptarchitektur entschieden. Jedoch kann diese Implementierung zusatzlich gesteset und eventuell mit in dei Hauptarchitektur verbunden werden. 
-
-Bildverarbeitung und Sendung waren...
-
-
-
 Folgende Ziele wurden erreicht:
 - Bildverarbeitung sowie Zuschneidung der Bilder
 - Übertragung der Bilder zu einem anderen Esp32
 - Anzeigen der aufgenommen Bilder
 - Gesichtsanalyse mit den Labels: Feind/Freund
   - Konnte aber noch nicht mit der Hauptarchitektur verbunden werden.
+  
+### Probleme
+Einer der größten Herausforderungen ist die Implementation von Edge Impuls Face Detection und Face Recognition. Wegen Zeitmangel und ein Source Code der etwas unübersichtlich sowie angepasst werden musste, ist die Implementation noch nicht gelungen. Haupsächtlich liegt der Grund hierzu, das die SDK Edge Impuls Object Detection Bibliothek, mittels der eingebauten Funktionen einen Kamerabildpuffer erwartet hat.
+Deswegen hat ein Beispiel mit einem Videowebserver und einer Klassifizierung von feindlichen und freundlichen (bitte lächeln) funktioniert.
+
+Die Bildverarbeitung von Jpeg zu RGB hat Zeit gekostet, da die Funktion
+`cppjpg2rgb565` von img_converters.h den Farbencode (rot, grün, blau) vertauscht zu blau, grün, rot.
+
+Bei der Bildersendung, wurde es anfänglich mit nur einem Array versucht für eine schneller Übertragung. Die Übertragung verlief immer schief, deswegen wurde dann ein `struct` verwendet.
+
+Bei Vorstellung wurde entdeckt, dass die ESPNow Kommunikation gestört werden kann, indem konstant von ein steuerbares Spielauto zu einem Server mit ESPNow, kleine Datenpakete gesendet werden, obwohl die unterschiedlichen ESPs andere MAC-Adresse sowie WiFi Kanals hatten. Dies hat dazu geführt, dass die Empfänger Seite keine Bilder mehr annehmen konnte.
+
+
+### Weiterentwicklung
+- Die Edge Impuls Bibliothek müsste angepasst werden.
+- Bei der ESPNow braucht man mehr und bessere Statuscode (0x01 und 0x02), da dies wahrscheinlich auch ein Grund war, wieso es zu Störung kam.
+- Bei Empfänger sollten die Daten direkt in die Memory gespeichert werden und anschließend sollte in ein Bildbuffer gespeichert werden, da Receive Callback Funktion von ESPNow nicht zu stark belastet werden sollten.
+
+
+
+## Repository-Überblick
+Das Repo ist folgendermaßen aufgebaut:
+- Der Ordner `information`, besitzt unsortierte Quellenangaben zum Board, ESP-idf oder zu verschiedensten Codeangaben und Beispielen.
+- Der Ordner `not_functional`, beinhaltet einen geändert Source Code von Edge Impulse, der nicht funktioniert. Dieser Ordner wird auch in laufe der Zeit entfernt.
+- Der Ordner `Tests_Beispiele`, hat mehrere Code Beispiele die funktionieren sollten.
+- Im `src` ist der enthaltene Code zum Projekt T.A.U.B.E/N. Dabei ist dieser derzeit in den Teil aufgeteilt der für die Bildverarbeitung, Zuschneiden, Versendung und Anzeigen zuständig ist und der andere Teil ist der Videowebserver auf der Gesichter als Feind oder Freund klassifiziert und markiert werden.
+
+### Setup
+Da die Programmierung in der Arduino IDE ist, muss der Code von `src` auch in der Arduino IDE geladen werden. Zusätzlich muss die esp32, AsyncWebServer und AsyncTCP installiert werden.
+
+Für den Codeteil: `espnow_communication` in `src`, werden zwei Esp32 (mit PSRAM) benötigt. Auf dem einen wird `espnow_photo_sender` geladen. Dort müsste die Kamerakonfiguration angepasst werden. Dafür kann z.B. das Arduino IDE Beispiel CameraWebServer in z.B. den Board config nachgeschaut werden. Es muss geachtet werden, dass der Esp32 PSRAM verwenden kann und dieser muss eingestellt werden. Falls es einstellbar ist, sollte `OPI PSRAM`, in der Boardeinstellung, eingestelt werden.
+Weitere Hinweise:
+- Die Funktion `tryNextChannel`, sollte im markierten Bereich bei `OnDataSent`, bei Kanalsuche auskommentiert werden, um den richtigen WiFi Kanal zu finden. Durch den AsyncWebServer auf dem Empfänger, unterscheidet sich dieser Kanal sehr sprunghaft. 
+- In der Funktion `takePhoto()`, können die Werte bei `photocutting()` Werte verändert werden, um das Bild unterschiedlich zu Cutten. Diese sollten aber nicht Null sein oder negativ, da sonst Buffer Overflows entstehen können, durch die Berechnungen in der Funktion. \
+
+
+
+
+
+
+
+
 
 
