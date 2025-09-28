@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2025 Dein Name
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #include "esp_camera.h"
 #include <esp_now.h>
 #include <WiFi.h>
@@ -34,7 +51,7 @@ size_t jpg_len = 0;
 size_t rgbwidth = 0;
 size_t rgbheight = 0;
 size_t rgblen = 0;
-uint8_t broadcastAddress[] = {0xFC, 0x01, 0x2C, 0xD1, 0xF6, 0xD4};
+uint8_t broadcastAddress[] = {};
 esp_now_peer_info_t peerInfo;
 
 uint8_t channel = 1; //Für suche des Channels
