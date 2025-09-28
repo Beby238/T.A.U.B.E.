@@ -263,7 +263,7 @@ Die IP-Adresse vom Webserver wird angezeigt und darauf kann man auf die fotograf
 
 ## Lizenz und Danksagung
 Dieses Projekt ist unter der **GNU General Public License v3 (GPLv3)** lizenziert.
-Siehe [LICENSE](LICENSE) für Details.
+Siehe [LICENSE](../LICENSE) für Details.
 
 
 ### Bibliotheken
