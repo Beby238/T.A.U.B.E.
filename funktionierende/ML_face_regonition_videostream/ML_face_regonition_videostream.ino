@@ -28,16 +28,14 @@
 #include "edge-impulse-sdk/dsp/image/image.hpp"
 
 #include "esp_camera.h"
-#include <WiFi.h>
-#include <ESPAsyncWebServer.h>
+
+#include "WebServerModule.h"
 
 
-//globale Variablen fuer Rechteck
-uint32_t faceX = -1;
-uint32_t faceY = -1;
-uint32_t faceW = -1;
-uint32_t faceH = -1;
 
+int faceX = -1, faceY = -1, faceW = -1, faceH = -1;
+String faceLabel = "";
+float faceConfidence = 0.0f;
 
 const int CAMERA_WIDTH = 320;
 const int CAMERA_HEIGHT = 240;
@@ -48,16 +46,12 @@ const int MODEL_HEIGHT = EI_CLASSIFIER_INPUT_HEIGHT;
 float scaleX = 320.0f / EI_CLASSIFIER_INPUT_WIDTH;
 float scaleY = 240.0f / EI_CLASSIFIER_INPUT_HEIGHT;
 
-String faceLabel = "";
-float faceConfidence = 0.0f;
+const char* ssid = "";
+const char* password = "";
 
 
-// WiFi-Zugangsdaten
-const char *ssid = "";
-const char *password = "";
 
-AsyncWebServer server(80);
-
+WebServerModule web(faceX, faceY, faceW, faceH, faceLabel, faceConfidence);
 
 // Select camera model - find more camera models in camera_pins.h file here
 // https://github.com/espressif/arduino-esp32/blob/master/libraries/ESP32/examples/Camera/CameraWebServer/camera_pins.h
@@ -158,35 +152,6 @@ bool ei_camera_capture(uint32_t img_width, uint32_t img_height, uint8_t *out_buf
 /**
 * @brief      Arduino setup function
 */
-
-
-void startCameraServer() {
-      server.on("/stream", HTTP_GET, [](AsyncWebServerRequest *request){
-    camera_fb_t *fb = esp_camera_fb_get();
-    if (!fb) {
-      request->send(500, "text/plain", "Kamera Fehler");
-      return;
-    }
-    
-    AsyncWebServerResponse *response = request->beginResponse_P(
-      200, 
-      "image/jpeg", 
-      fb->buf, 
-      fb->len
-    );
-    
-    response->addHeader("Access-Control-Allow-Origin", "*");
-    response->addHeader("Content-Type", "image/jpeg");
-    response->addHeader("Cache-Control", "no-cache");
-    
-    request->send(response);
-    esp_camera_fb_return(fb);
-  });
-  
-  server.begin();
-  Serial.println("WebServer gestartet!");
-}
-
 void setup()
 {
     // put your setup code here, to run once:
@@ -202,107 +167,11 @@ void setup()
     }
 
 
-    // Mit WiFi verbinden
-  WiFi.begin(ssid, password);
-  WiFi.setSleep(false);
-
-  int connectAttempts = 0;
-  while (WiFi.status() != WL_CONNECTED && connectAttempts < 20) {
-    delay(500);
-    Serial.print(".");
-    connectAttempts++;
-  }
-
-  if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("WiFi Verbindung fehlgeschlagen!");
-    return;
-  }
-
-
-  Serial.println("");
-  Serial.println("WiFi verbunden");
-  Serial.print("IP-Adresse: ");
-  Serial.println(WiFi.localIP());
-
-  // Webseite für den Stream
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-    String html = R"rawliteral(
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>ESP32-S3 Kamera</title>
-        <style>
-            body { text-align: center; }
-            canvas { max-width: 90%; border:1px solid #ccc; }
-        </style>
-    </head>
-    <body>
-        <h1>ESP32-S3 Kamera Stream</h1>
-        <canvas id="canvas"></canvas>
-        <script>
-            const canvas = document.getElementById('canvas');
-            const ctx = canvas.getContext('2d');
-            const img = new Image();
-
-            img.onload = function() {
-                // Canvasgröße auf Bildgröße anpassen
-                canvas.width = img.width;
-                canvas.height = img.height;
-
-                // Bild zeichnen
-                ctx.drawImage(img, 0, 0);
-
-                // JSON vom ESP holen
-                fetch('/face')
-                    .then(r => r.json())
-                    .then(data => {
-                        // Rechteck zeichnen
-                        ctx.strokeStyle = "red";
-                        ctx.lineWidth = 3;
-                        ctx.strokeRect(data.x + 0, data.y + 0, data.w + 0, data.h + 0);
-                        ctx.fillstyle = "red";
-                        ctx.font = "16px Arial";
-                        ctx.fillText(`${data.label} (${data.confidence})`, data.x, data.y - 5);
-                    });
-            };
-
-            // Alle 100ms neues Bild laden
-            setInterval(() => {
-                img.src = '/stream?' + new Date().getTime();
-            }, 100);
-        </script>
-    </body>
-    </html>
-    )rawliteral";
-    request->send(200, "text/html", html);
-  });
-
-  // Route für JSON (Testdaten oder später Face Detection)
-server.on("/face", HTTP_GET, [](AsyncWebServerRequest *request) {
-    String json;
-    if (faceX >= 0) {
-        json = String("{\"x\":") + String(faceX) +
-               String(",\"y\":") + String(faceY) +
-               String(",\"w\":") + String(faceW) +
-               String(",\"h\":") + String(faceH) +
-               String(",\"label\":\"") + faceLabel + String("\"") +
-               String(",\"confidence\":") + String(faceConfidence, 2) +
-               String("}");
-    } else {
-        json = "{}";
-    }
-    request->send(200, "application/json", json);
-});
-
-
-    startCameraServer();
-
+    // Webserver starten
+    web.begin(ssid, password);
 
     ei_printf("\nStarting continious inference in 2 seconds...\n");
-    ei_sleep(10000);
-
-
-    
+    ei_sleep(2000);
 }
 
 /**
@@ -349,20 +218,16 @@ void loop()
     ei_printf("Predictions (DSP: %d ms., Classification: %d ms., Anomaly: %d ms.): \n",
                 result.timing.dsp, result.timing.classification, result.timing.anomaly);
 
-#if EI_CLASSIFIER_OBJECT_DETECTION == 1  // hier ist die korrekte Stelle
+#if EI_CLASSIFIER_OBJECT_DETECTION == 1
     ei_printf("Object detection bounding boxes:\r\n");
-    for (uint32_t i = 0; i < result.bounding_boxes_count; i++) {   //hier koordinaten
+    for (uint32_t i = 0; i < result.bounding_boxes_count; i++) {
         ei_impulse_result_bounding_box_t bb = result.bounding_boxes[i];
         if (bb.value == 0) {
             continue;
         }
 
-                // Mittelpunkt berechnen, wird nur im Seriellen Monitor ausgegeben
-    uint32_t centerX = bb.x + bb.width / 2;
-    uint32_t centerY = bb.y + bb.height / 2;
-
-
-    // In globale Variablen schreiben
+        
+        // In globale Variablen schreiben
     faceX = bb.x * scaleX;
     faceY = bb.y * scaleY;
     faceW = bb.width * scaleX + 60;
@@ -371,21 +236,17 @@ void loop()
     faceLabel = String(bb.label);
     faceConfidence == bb.value;
 
-         
-               
 
 
 
 
-       ei_printf("  %s (%f) [ x: %u, y: %u, width: %u, height: %u, Center=(%u,%u) ]\r\n",
+        ei_printf("  %s (%f) [ x: %u, y: %u, width: %u, height: %u ]\r\n",
                 bb.label,
                 bb.value,
                 bb.x,
                 bb.y,
                 bb.width,
-                bb.height, 
-                centerX,
-                centerY);
+                bb.height);
     }
 
     // Print the prediction results (classification)
@@ -402,16 +263,14 @@ void loop()
     ei_printf("Anomaly prediction: %.3f\r\n", result.anomaly);
 #endif
 
-#if EI_CLASSIFIER_HAS_VISUAL_ANOMALY  // das scheint nicht die korrekte stelle zu sein
+#if EI_CLASSIFIER_HAS_VISUAL_ANOMALY
     ei_printf("Visual anomalies:\r\n");
     for (uint32_t i = 0; i < result.visual_ad_count; i++) {
         ei_impulse_result_bounding_box_t bb = result.visual_ad_grid_cells[i];
         if (bb.value == 0) {
             continue;
         }
-
-
-        ei_printf("  %s (%f) [ x: %u, y: %u, width: %u, height: %u, Center=(%u, %u) ]\r\n",
+        ei_printf("  %s (%f) [ x: %u, y: %u, width: %u, height: %u ]\r\n",
                 bb.label,
                 bb.value,
                 bb.x,
@@ -423,19 +282,7 @@ void loop()
 
 
     free(snapshot_buf);
-
-        
-    ei_printf("Model input size = %dx%d\n",
-          EI_CLASSIFIER_INPUT_WIDTH,
-          EI_CLASSIFIER_INPUT_HEIGHT);
-
-         
-
-
-
-
- 
-  
+    web.handleClient();
 
 }
 
@@ -571,12 +418,7 @@ static int ei_camera_get_data(size_t offset, size_t length, float *out_ptr)
         pixel_ix+=3;
         pixels_left--;
     }
-
-
-
-   
-                
-                    // and done!
+    // and done!
     return 0;
 }
 
