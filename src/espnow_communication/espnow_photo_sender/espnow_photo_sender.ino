@@ -15,6 +15,11 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+/**
+* Diese Datei wird auf einem ESP32 geladen und nimmt ein Bild auf, verarbeitet es und sendet es über ESP-NOW an einen anderen ESP32.
+* @author Daniel Babkin
+*/
+
 #include "esp_camera.h"
 #include <esp_now.h>
 #include <WiFi.h>
@@ -22,6 +27,11 @@
 
 #include "img_converters.h" // für jpgtorgb565
 
+
+
+/**
+* Die Kamerapins Einstellungen. Müssen eingestellt werden.
+*/
 #define PWDN_GPIO_NUM  32
 #define RESET_GPIO_NUM -1
 #define XCLK_GPIO_NUM  0
@@ -39,6 +49,8 @@
 #define VSYNC_GPIO_NUM 25
 #define HREF_GPIO_NUM  23
 #define PCLK_GPIO_NUM  22
+
+
 
 //Die max. Größe vom Paket liegt zwischen 1000 und 1500 Bytes
 #define maxpackage 1000
@@ -62,6 +74,10 @@ byte tookPhotoFlag = 0;
 byte sendnextPackageFlag = 0;
 byte letztespaket = 0;
 
+
+/**
+* Ein struct zur Speicherung von wichtigen Daten für die Übetragung 
+*/
 typedef struct photo_information {
   uint8_t phase;
   int jpegsize;
@@ -75,6 +91,9 @@ photo_information photo_info;
 camera_fb_t* fb = 0;
 camera_config_t config;
 
+/**
+* Initierung der Kameraeinstellungen
+*/
 void initCamera(){
   config.ledc_channel = LEDC_CHANNEL_0;
   config.ledc_timer = LEDC_TIMER_0;
@@ -127,11 +146,14 @@ void initCamera(){
   Serial.println("psramFound() = " + String(psramFound()));
 }
 
+/**
+* Nimmt ein Bild auf, wandelt es in eine rgb565 Format, wechselt die Rot und Blau Farben, schneidet das Bild zu, formatiert es wieder zu Jpeg zurück und beginnt die Übertragung.
+*/
 void takePhoto(){
   tookPhotoFlag = 0;
   Serial.println("Foto aufnehmen rgb_cuten");
 
-  //
+  //Die LED auf einem ESP32-CAM
   digitalWrite(4, HIGH);
   delay(300);
   fb = esp_camera_fb_get();
@@ -143,8 +165,8 @@ void takePhoto(){
   rgb_buf = (uint8_t*) ps_malloc(fb->width * fb->height *2);
   jpg2rgb565(fb->buf, fb->len, (uint8_t*)rgb_buf, JPG_SCALE_NONE); //Das kann geändert werden: JPG_SCALE_(NONE/2X/4X/8X)
 
-  //Farben tauschen, weil Endian Reihenfolge anders ist
-  for (size_t i = 0; i < fb->width * fb->height *2; i += 2) { //sizeof(rgb_buf)
+  //Farben tauschen, denn r und b sind vertauscht
+  for (size_t i = 0; i < fb->width * fb->height *2; i += 2) {
     uint8_t tmp = rgb_buf[i];
     rgb_buf[i] = rgb_buf[i + 1];
     rgb_buf[i + 1] = tmp;
@@ -159,17 +181,24 @@ void takePhoto(){
   transmitting();
 }
 
-/// XXX: Die Koordinaten können nicht stimmen für AI <-- noch zu machen
+/**
+* Diese Funktion nimmt Werte auf und schneidet das jeweilige Frame raus.
+* @param cropLeft linke Seite eines Bildes
+* @param cropRight rechte Seite eines Bildes
+* @param cropTop oberes Teil eines Bildes
+* @param cropBottom unterer Teil eines Bilder
+*/
 void photocutting(unsigned int cropLeft, unsigned int cropRight,
   unsigned int cropTop, unsigned int cropBottom){
 
+  //fb->width und fb->height können sich ändern je nach Skalierung
   rgbwidth = fb->width;
   rgbheight = fb->height;
   rgblen = rgbwidth * rgbheight * 2;
-  //fb->width und fb->height können sich ändern je nach SCale
+  
   unsigned int maxTopIndex = cropTop * rgbwidth * 2;
   unsigned int minBottomIndex = ((rgbwidth*rgbheight) - (cropBottom * rgbwidth)) * 2;
-  unsigned short maxX = rgbwidth - cropRight; //In Pixels
+  unsigned short maxX = rgbwidth - cropRight;
   unsigned short newWidth = rgbwidth - cropLeft - cropRight;
   unsigned short newHeight = rgbheight - cropTop - cropBottom;
   size_t newRgblen = newWidth * newHeight * 2;
@@ -177,7 +206,7 @@ void photocutting(unsigned int cropLeft, unsigned int cropRight,
 
   rgb_cut = (uint8_t*) ps_malloc(newWidth * newHeight * 2);
   unsigned int writeIndex = 0;
-  //Loop over all bytes
+
   for (int i = 0; i < rgblen; i+=2){
     int x = (i/2) % rgbwidth;
 
@@ -196,18 +225,23 @@ void photocutting(unsigned int cropLeft, unsigned int cropRight,
   Serial.println("cutted RGB größe: " + String(rgblen));
 }
 
-
+/**
+* Übertragung von der Größe des Bildes, sowie die gesamte Paketanzahl.
+*/
 void transmitting(){
   photo_info.jpegsize = jpg_len ;
   Serial.println("Größe des Fotos: " + (String)photo_info.jpegsize);
   photo_info.position = 0;
   photo_info.gesamtpakete = ceil(photo_info.jpegsize / maxpackage);
-  Serial.println("Packetanzahl: " +  (String)photo_info.gesamtpakete);
+  Serial.println("Paketanzahl: " +  (String)photo_info.gesamtpakete);
 
   photo_info.phase = 0x01;
   sendData();
 }
 
+/**
+* Sendung von den Paketen. Wenn es nicht das letzte Paket ist wird es mit der Standardpaketgrößen Einstellung in einem Array vom struct gespeichert und anschließend gesendet. Wenn es das letzte Paket ist, wird die Dateneingabe verringert vom Array.
+*/
 void sendnextPaket(){
   sendnextPackageFlag = 0;
   if (letztespaket && photo_info.position > photo_info.gesamtpakete){
@@ -235,6 +269,9 @@ void sendnextPaket(){
   sendData();
 }
 
+/**
+* Es wird der WiFi Kanal geändert.
+*/
 void tryNextChannel() {
   Serial.println("Changing channel from " + String(channel) + " to " + String(channel+1));
   channel = channel % 13 + 1;
@@ -243,10 +280,12 @@ void tryNextChannel() {
   esp_wifi_set_promiscuous(false);
 }
 
+/**
+* Eine Callback Methode für ESP-NOW. Beinhaltet die Kanalsuche. Sendet das letzte gesendete Paket nochmal, wenn ein Fehler da ist.
+*/
 void OnDataSent(const uint8_t * mac_addr, esp_now_send_status_t status) {
   Serial.print("\r\nLast Packet Send Status:\t");
 
-  //Bleibt weil die Channel suche müselig ist und mit
   if (!channelFound && status != ESP_NOW_SEND_SUCCESS){
     //Serial.println("Delivery Fail because channel" + String(channel) + " does not match receiver channel.");
     tryNextChannel(); // If message was not delivered, it tries on another wifi channel.
@@ -265,7 +304,9 @@ void OnDataSent(const uint8_t * mac_addr, esp_now_send_status_t status) {
 
 }
 
-//Nur für das senden zuständig
+/**
+* Für das Senden der Datenpakete und Statusabfrage zuständig.
+*/
 void sendData(){
   esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &photo_info, sizeof(photo_info));
   if (result == ESP_OK) {
@@ -285,6 +326,9 @@ void sendData(){
   }
 }
 
+/**
+* Einstellungen für ESP32
+*/
 void setup() {
 
   Serial.begin(115200);
@@ -295,32 +339,40 @@ void setup() {
     Serial.println("Error initializing ESP-NOW");
     return;
  }
- //neuere Methode für callback hinzufügen
+ //neuere Methode für ESP-NOW callback hinzufügen
   esp_now_register_send_cb(esp_now_send_cb_t(OnDataSent)); 
   memcpy(peerInfo.peer_addr, broadcastAddress, 6);
 
-  //
+  //Channel Einstellung für WiFi. Standard ist Channel 1.
   esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE); 
 
+  //Einstellung für ESP-NOW Verschlüsselung
   peerInfo.encrypt = false;
      
+  // Hinzufügen vom ESP-NOW Peer also Empfänger.
   if (esp_now_add_peer(&peerInfo) != ESP_OK){
     Serial.println("Failed to add peer");
     return;
   }
-
+  
+  //LED
   pinMode(4, OUTPUT);
   digitalWrite(4, LOW);
 
+  //Ob PSRAM vorhanden ist
   Serial.println("psramFound() = " + String(psramFound()));
 
   initCamera();
+  
   Serial.println("Größe vom Struct: " + String(sizeof(photo_info)));
-  //WiFi.printDiag(Serial);
-
 }
 
+/**
+* Dauerschleife vom ESP32
+*/
 void loop() {
+
+// Falls noch kein Bild gesendet wird, kann ein Foto geschossen werden
   if (!sendnextPackageFlag && !tookPhotoFlag && Serial.available() > 0 && Serial.read() == 'f'){
     tookPhotoFlag = 1;
     takePhoto();
