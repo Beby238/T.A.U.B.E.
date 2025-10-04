@@ -58,6 +58,7 @@
 - https://arm-software.github.io/CMSIS_6/latest/General/index.html
 - Tutorial für Objekt Erkennung (Face Detectio/Recognition)
   - https://docs.edgeimpulse.com/tutorials/end-to-end/object-detection-centroids
+  - https://github.com/edgeimpulse/example-llm-model-cascade-object-tracking
 
 ## Using PSRAM
 - https://thingpulse.com/esp32-how-to-use-psram/
