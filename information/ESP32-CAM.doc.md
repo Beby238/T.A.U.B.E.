@@ -59,6 +59,9 @@
 - Tutorial für Objekt Erkennung (Face Detectio/Recognition)
   - https://docs.edgeimpulse.com/tutorials/end-to-end/object-detection-centroids
   - https://github.com/edgeimpulse/example-llm-model-cascade-object-tracking
+  - https://docs.edgeimpulse.com/studio/projects/post-processing/object-tracking#webassembly
+- https://docs.edgeimpulse.com/tools/libraries/sdks/inference/cpp
+- 
 
 ## Using PSRAM
 - https://thingpulse.com/esp32-how-to-use-psram/
